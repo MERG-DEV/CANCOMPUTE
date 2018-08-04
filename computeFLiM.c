@@ -45,6 +45,7 @@
 #include "cancompute.h"
 #include "computeNv.h"
 #include "computeEvents.h"
+#include "cbus.h"
 
 #ifndef __XC8__
 #pragma romdata PARAMETERS
@@ -115,6 +116,22 @@ void computeFlimInit(void) {
     flimInit();
     computeNvInit();
     
+}
+
+void doArdat(void) {
+    cbusMsg[d0] = OPC_ACDAT;
+    // d1 and d2 are the NN
+    cbusMsg[d3] = ruleState;
+    cbusMsg[d4] = nvPtr;
+    if (cbusMsg[d3] == VALID) {
+        cbusMsg[d5] = ruleIndex;
+        cbusMsg[d6] = expressionIndex;
+    } else {
+        cbusMsg[d5] = 0;
+        cbusMsg[d6] = 0;
+    }
+    cbusMsg[d7] = 0;
+    cbusSendMsgMyNN( 0, cbusMsg );
 }
 
 //void SaveNodeDetails(WORD Node_id, BOOL	FLiMmode)

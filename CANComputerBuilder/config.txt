@@ -1,0 +1,13 @@
+/* 
+ * This is the language for defining CANCOMPUTE operation
+ */
+
+// define some events first
+define $event1 = NN:1111 EN:1112;
+define $event2 = NN:2221 EN:2222;
+define $event3 = NN:3331 EN:3332;
+define $event4 = NN:4441 EN:4442;
+
+// Now define some rules
+if receive on$event1 within 2sec send on$event2;
+if receive count(on$event3) > 10 within 2sec send on$event4 then delay 1sec, send off$event4;

@@ -64,64 +64,47 @@ extern "C" {
  
 #include "cancompute.h"
 
-/* CONSUMED actions */
-#define ACTION_SIMULTANEOUS                 0x80    // default is SEQUENTIAL
-#define ACTION_MASK                         0x7F
-    
-    // Global consumed actions first
-#define ACTION_CONSUMER_SOD                 1
-#define ACTION_CONSUMER_WAIT05              2
-#define ACTION_CONSUMER_WAIT1               3
-#define ACTION_CONSUMER_WAIT2               4
-#define ACTION_CONSUMER_WAIT5               5
-
-        // Now Consumed actions per io
-#define ACTION_CONSUMER_IO_BASE             8
-#define ACTION_IO_CONSUMER_1                0
-#define ACTION_IO_CONSUMER_2                1
-#define ACTION_IO_CONSUMER_3                2
-#define ACTION_IO_CONSUMER_4                3
-#define CONSUMER_ACTIONS_PER_IO             4   
-#define NUM_CONSUMER_ACTIONS                255      
-    
-/* PRODUCED actions */    
-#define ACTION_PRODUCER_BASE                0
-    // Global produced actions next
-#define ACTION_PRODUCER_SOD                 1
-    // produced actions per io
-#define ACTION_PRODUCER_IO_BASE             8
-#define ACTION_IO_PRODUCER_1                0
-#define ACTION_IO_PRODUCER_2                1
-#define ACTION_IO_PRODUCER_3                2
-#define ACTION_IO_PRODUCER_4                3
-#define NUM_PRODUCER_ACTIONS                255
-
 extern void computeEventsInit(void);
-extern void factoryResetGlobalEvents(void);
-extern void defaultEvents(unsigned char i, unsigned char type);
-extern void clearEvents(unsigned char i);
+
 
 // These are chosen so we don't use too much memory 32*20 = 640 bytes.
 // Used to size the hash table used to lookup events in the events2actions table.
 #define HASH_LENGTH     32
 #define CHAIN_LENGTH    20
 
-#define NUM_EVENTS              255         // must be less than 256 otherwise loops fail
+#define NUM_EVENTS              100       // must be less than 256 otherwise loops fail. These will have EV#1 with 0..99
 #define EVENT_TABLE_WIDTH       1         // Width of eventTable
-#define EVperEVT                1          // Max number of EVs per event
-#ifdef __18F25K80
-#define AT_EVENTS               0x6F80      //(AT_NV - sizeof(EventTable)*NUM_EVENTS) Size=256 * 22 = 5632(0x1600) bytes
-#endif
-#ifdef __18F26K80
-#define AT_EVENTS               0xEF80      //(AT_NV - sizeof(EventTable)*NUM_EVENTS) Size=256 * 22 = 5632(0x1600) bytes
-#endif
+#define EVperEVT                1         // Max number of EVs per event
+
+#define AT_EVENTS               (AT_NV - 0x2BC)      //(AT_NV - sizeof(EventTable)*NUM_EVENTS) Size=NUM_EVENTS * 7 = 700(0x2BC) bytes
+
 
 // We'll also be using configurable produced events
 #define PRODUCED_EVENTS
 #define ConsumedActionType  BYTE;
 
+#define ACTION_PRODUCER_BASE    0
+#define NUM_PRODUCER_ACTIONS    256                 // Since we are using 255 for SOD this must be beyond the expected NUM_EVENTS
+#define ACTION_PRODUCER_SOD     255                 // EV#1 with 255 indicates the Produced SOD
+
 extern void processEvent(BYTE eventIndex, BYTE* message);
 extern void processActions(void);
+extern BYTE findEventByEV1(BYTE ev);
+extern BYTE received(BYTE eventNo, BOOL on);
+extern void doArdat(void);
+
+typedef struct {
+    BOOL on;
+    BYTE index;
+    union {
+        WORD word;
+        struct {
+            BYTE b1;
+            BYTE b2;
+        } bytes;
+    } time;
+} RxBuffer;
+#define NUM_BUFFERS 128
 
 #include "events.h"
 

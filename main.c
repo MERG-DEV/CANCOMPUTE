@@ -38,14 +38,29 @@
  * Created on 10 April 2017, 10:26
  */
 /** TODOs
- * Work out what to do if all CANIDs are taken can18.c
- * Check handling of REQEV events.c
- * Heartbeat message
- * CHECK DOCS
+ * * Handle ARDAT
+ * * receive to check times
+ * * Multiple actionQueues
  * 
  * DONES:
+ * * Move rules, expressions, operands, actions to Flash
+ * * Run rules expression regularly, 
+ * * Store result of rule expression so can detect changes
+ * * Execute actions on result of expression
  * 
- * 
+ */
+/*
+ * Flash memory is laid out thus:
+ * Usage            Qty     Size    Total Size  Type      Address
+ * NVs              256     1       0x0100      Flash     0x7F00 - 0x7FFF
+ * Events           100     7       0x02BC      Flash     0x7C44 - 0x7EFF
+ * Rules            50      4       0x00C8      Flash     0x7B7C - 0x7C43
+ * Expressions      100     3       0x012C      Flash     0x7A50 - 0x7B7B
+ * RuleIndex        1       1       0x0001      Flash     0x7A4F - 0x7A4F
+ * ExpressionIndex  1       1       0x0001      Flash     0x7A4E - 0x7A4E
+ * ruleState        1       1       0x0001      Flash     0x7A4D - 0x7A4D
+ * NvPtr            1       1       0x0001      Flash     0x7A4C - 0x7A4C
+ * Rxbuf            200     4       800         RAM
  */
 
 /**
@@ -149,12 +164,16 @@ void LOW_INT_VECT(void)
 static TickValue   startTime;
 static BOOL        started = FALSE;
 static TickValue   lastActionPollTime;
+static TickValue   lastRulePollTime;
 
 #ifdef BOOTLOADER_PRESENT
 // ensure that the bootflag is zeroed
 #pragma romdata BOOTFLAG
 rom BYTE eeBootFlag = 0;
 #endif
+
+
+ACTION_T NO_ACTION = {NOP,0};
 
 // MAIN APPLICATION
 #pragma code
@@ -167,6 +186,7 @@ void main(void) {
 #else
 int main(void) @0x800 {
 #endif
+    BYTE sodDelay;
     initRomOps();
 #ifdef NV_CACHE
     // If we are using the cache make sure we get the NVs early in initialisation
@@ -177,24 +197,27 @@ int main(void) @0x800 {
 
     startTime.Val = tickGet();
     lastActionPollTime.Val = startTime.Val;
+    lastRulePollTime.Val = startTime.Val;
     
     initialise(); 
-
+    sodDelay = getNv(NV_SOD_DELAY);
     while (TRUE) {
         // Startup delay for CBUS about 2 seconds to let other modules get powered up - ISR will be running so incoming packets processed
-        if (!started && (tickTimeSince(startTime) > (NV->sendSodDelay * HUNDRED_MILI_SECOND) + TWO_SECOND)) {
+        if (!started && (tickTimeSince(startTime) > (sodDelay * HUNDRED_MILI_SECOND) + TWO_SECOND) && (sodDelay>0)) {
             started = TRUE;
-            if (NV->sendSodDelay > 0) {
-                sendProducedEvent(ACTION_PRODUCER_SOD, TRUE);
-            }
+            sendProducedEvent(ACTION_PRODUCER_SOD, TRUE);
         }
         checkCBUS();    // Consume any CBUS message and act upon it
         FLiMSWCheck();  // Check FLiM switch for any mode changes
         
         if (started) {
             if (tickTimeSince(lastActionPollTime) > 100*ONE_MILI_SECOND) {
-                processActions();
                 lastActionPollTime.Val = tickGet();
+                processActions();
+            }
+            if (tickTimeSince(lastRulePollTime) > 100*ONE_MILI_SECOND) {
+                lastRulePollTime.Val = tickGet();
+                runRules();
             }
         }
         // Check for any flashing status LEDs
@@ -225,7 +248,7 @@ void initialise(void) {
 #endif
     }
     // check if FLASH is valid
-   if (NV->nv_version != FLASH_VERSION) {
+   if (getNv(NV_VERSION) != FLASH_VERSION) {
         // may need to upgrade of data in the future
         // set Flash to default values
         factoryResetFlash();
@@ -240,6 +263,7 @@ void initialise(void) {
     INTCON2bits.RBPU = 0;
     // RB bits 0,1,4,5 need pullups
     WPUB = 0x33;
+    ruleInit();
     actionQueueInit();
     computeEventsInit();
     computeFlimInit(); // This will call FLiMinit, which, in turn, calls eventsInit, cbusInit
@@ -280,11 +304,8 @@ void factoryReset(void) {
 }
 
 void factoryResetFlash(void) {
-    unsigned char io;
     factoryResetGlobalNv();
-    factoryResetGlobalEvents();
     clearAllEvents();
-
     flushFlashImage();
 }
 
@@ -312,6 +333,9 @@ BOOL checkCBUS( void ) {
                 // if we just call main then the stack won't be reset and we'd also want variables to be nullified
                 // instead call the RESET vector (0x0000)
                 Reset();
+            case OPC_ARDAT:
+                doArdat();
+                return TRUE;
             }
         }
     }

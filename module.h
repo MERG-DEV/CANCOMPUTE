@@ -52,7 +52,7 @@ extern "C" {
 #define BOOTLOADER_PRESENT
 
 // We'll be using event hash tables for fast access - at the expense of some RAM
-#define HASH_TABLE
+//#define HASH_TABLE
 
 
 // enable this for additional validation checks
@@ -67,20 +67,25 @@ extern "C" {
     // Whether the module uses high or low priority for CAN interrupts
     // set to 0 for LP. Set to 0xFF for HP
 #define CAN_INTERRUPT_PRIORITY 0    // all low priority
- /*
- * NVs
- */
+     
+#define CONSUMER_ACTION_T   unsigned char
+#define PRODUCER_ACTION_T	unsigned char
+    
 #include "computeNv.h"
 #include "computeEEPROM.h"
-
-
+#include "rules.h"
+    
 /*
  * EVENTS
  */
-#define CONSUMER_ACTION_T	unsigned char
-#define PRODUCER_ACTION_T	unsigned char
+typedef struct {
+    OpCodes op;
+    BYTE arg;
+} ACTION_T;
+
+
 #include "computeEvents.h"
-    
+
 
 /*
  * FLASH bounds

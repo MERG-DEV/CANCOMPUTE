@@ -55,8 +55,8 @@ extern "C" {
     
 // Global NVs
 #define NV_VERSION                      0
-#define NV_SOD_DELAY                    1
-#define NV_HB_DELAY                     2  
+#define NV_RULES                        1
+#define NV_SOD_DELAY                    255
 
 
 /*
@@ -70,19 +70,19 @@ typedef struct {
 
 #define NV_NUM  sizeof(ModuleNvDefs)     // Number of node variables
 #ifdef __18F25K80
-#define AT_NV   0x7F80                  // Where the NVs are stored. (_ROMSIZE - 128)  Size=128 bytes
+#define AT_NV   (0x8000 - 0x100)        // Where the NVs are stored. (_ROMSIZE - 256)  Size=256 bytes
 #endif
 #ifdef __18F26K80
-#define AT_NV   0xFF80                  // Where the NVs are stored. (_ROMSIZE - 128)  Size=128 bytes
+#define AT_NV   0xFF00                  // Where the NVs are stored. (_ROMSIZE - 128)  Size=128 bytes
 #endif
 
 extern void computeNvInit(void);
 extern unsigned int getNodeVar(unsigned int index);
 extern void setNodeVar(unsigned int index, unsigned int value);
 extern BOOL validateNV(BYTE nvIndex, BYTE oldValue, BYTE value);
-void actUponNVchange(unsigned char index, unsigned char oldValue, unsigned char value);
+extern void actUponNVchange(unsigned char index, unsigned char oldValue, unsigned char value);
 extern void defaultNVs(unsigned char i, unsigned char type);        
-
+extern BYTE getNv(BYTE NVindex);
 
 #ifdef	__cplusplus
 }

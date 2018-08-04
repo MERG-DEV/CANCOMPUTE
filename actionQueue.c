@@ -36,18 +36,19 @@
  */
 
 #include "GenericTypeDefs.h"
+#include "module.h"
 #include "computeEvents.h"
 #include "actionQueue.h"
 #include "queue.h"
 
 BYTE normalReadIdx;                   // index of the next to read
 BYTE normalWriteIdx;                  // index of the next to write
-CONSUMER_ACTION_T normalQueueBuf[ACTION_NORMAL_QUEUE_SIZE];   // the actual cyclic buffer space
+ACTION_T normalQueueBuf[ACTION_NORMAL_QUEUE_SIZE];   // the actual cyclic buffer space
 Queue normalQueue;
 
 BYTE expeditedReadIdx;                   // index of the next to read
 BYTE expeditedWriteIdx;                  // index of the next to write
-CONSUMER_ACTION_T expeditedQueueBuf[ACTION_EXPEDITED_QUEUE_SIZE];   // the actual cyclic buffer space
+ACTION_T expeditedQueueBuf[ACTION_EXPEDITED_QUEUE_SIZE];   // the actual cyclic buffer space
 Queue expeditedQueue;
 
 static BOOL expedited;
@@ -74,7 +75,7 @@ void actionQueueInit(void) {
  *
  * @param a the action to be processed
  */
-BOOL pushAction(CONSUMER_ACTION_T a) {
+BOOL pushAction(ACTION_T a) {
     if (expedited) {
         return push(&expeditedQueue, a);
     }
@@ -88,7 +89,7 @@ BOOL pushAction(CONSUMER_ACTION_T a) {
  *
  * @return the action
  */
-CONSUMER_ACTION_T getAction(void) {
+ACTION_T getAction(void) {
 	return peekActionQueue(0);
 }
 
@@ -97,10 +98,10 @@ CONSUMER_ACTION_T getAction(void) {
  *
  * @return the next action
  */
-CONSUMER_ACTION_T popAction(void) {
-    CONSUMER_ACTION_T ret;
+ACTION_T popAction(void) {
+    ACTION_T ret;
     ret = pop(&expeditedQueue);
-    if (ret != NO_ACTION) return ret;
+    if (ret.op != NOP) return ret;
     ret = pop(&normalQueue);
     return ret;
 }
@@ -120,7 +121,7 @@ void doneAction(void) {
  * @param index the item index within the queue
  * @return the Action or NO_ACTION 
  */
-CONSUMER_ACTION_T peekActionQueue(unsigned char index) {
+ACTION_T peekActionQueue(unsigned char index) {
     if (index < quantity(&expeditedQueue)) {
         return peek(&expeditedQueue, index);
     }

@@ -50,6 +50,8 @@
 #include "config.h"
 #include "cbus.h"
 
+#include "rules.h"
+
 #ifdef __XC8
 const ModuleNvDefs moduleNvDefs @AT_NV; // = {    //  Allow 128 bytes for NVs. Declared const so it gets put into Flash
 #else
@@ -69,6 +71,8 @@ volatile rom near ModuleNvDefs * NV = (volatile rom near ModuleNvDefs*)&(nodeVar
 #endif
 #endif
 
+extern void load(void);
+
 void computeNvInit(void) {
 
 }
@@ -78,12 +82,29 @@ void computeNvInit(void) {
  * @return TRUE is a valid change
  */
 BOOL validateNV(unsigned char index, unsigned char oldValue, unsigned char value) {
-    // TODO more validations
+    // all NV values are allowed
     return TRUE;
 } 
 
 void actUponNVchange(unsigned char index, unsigned char oldValue, unsigned char value) {
-    // 
+    // setting any NV to END will cause an attempt to convert all to the execution structures
+    if ((OpCodes)value == END) {
+        load();
+        // send message to indicate the result
+        cbusMsg[d0] = OPC_ACDAT;
+        // d1 and d2 are the NN
+        cbusMsg[d3] = ruleState;
+        cbusMsg[d4] = nvPtr;
+        if (cbusMsg[d3] == VALID) {
+            cbusMsg[d5] = ruleIndex;
+            cbusMsg[d6] = expressionIndex;
+        } else {
+            cbusMsg[d5] = 0;
+            cbusMsg[d6] = 0;
+        }
+        cbusMsg[d7] = 0;
+        cbusSendMsgMyNN( 0, cbusMsg );
+    }
 }
 
 
@@ -92,9 +113,17 @@ void actUponNVchange(unsigned char index, unsigned char oldValue, unsigned char 
  */
 void factoryResetGlobalNv(void) {
     writeFlashByte((BYTE*)(AT_NV + NV_SOD_DELAY), (BYTE)0);
-    writeFlashByte((BYTE*)(AT_NV + NV_HB_DELAY), (BYTE)0);
+    writeFlashByte((BYTE*)(AT_NV + NV_RULES), END);
+
 #ifdef NV_CACHE
     loadNvCache();
 #endif
 }
 
+BYTE getNv(BYTE NVindex) {
+    WORD flashIndex;
+    flashIndex = AT_NV;
+    flashIndex += NVindex;
+    
+    return readFlashBlock(flashIndex);
+}
