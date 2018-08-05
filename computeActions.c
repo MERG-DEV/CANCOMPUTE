@@ -1,6 +1,7 @@
 #include "TickTime.h"
 #include "computeEvents.h"
 #include "actionQueue.h"
+#include "computeActions.h"
 
 // forward declarations
 void doWait(BYTE q, unsigned int duration);
@@ -16,21 +17,21 @@ void processActions(void) {
     for (q=0; q<NUM_ACTION_QUEUES; q++) {
         ACTION_T action = getAction(q);
 
-        if (action.op == NOP) {
+        if (action.op == ACTION_OPCODE_NOP) {
             doneAction(q);
             continue;
         }
         // Check for SOD
 
-        if (action.op == DELAY) {
+        if (action.op == ACTION_OPCODE_DELAY) {
             doWait(q, action.arg);
             continue;
         }
-        if (action.op == SEND_ON) {
+        if (action.op == ACTION_OPCODE_SEND_ON) {
             sendProducedEvent(action.arg, TRUE);
             continue;
         }
-        if (action.op == SEND_OFF) {
+        if (action.op == ACTION_OPCODE_SEND_OFF) {
             sendProducedEvent(action.arg, FALSE);
             continue;
         }

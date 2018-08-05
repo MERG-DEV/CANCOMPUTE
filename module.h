@@ -79,8 +79,8 @@ extern "C" {
  * EVENTS
  */
 typedef struct {
-    OpCodes op;
-    BYTE arg;
+    BYTE op : 2;
+    BYTE arg : 6;
 } ACTION_T;
 
 
@@ -103,7 +103,7 @@ typedef struct {
 /*
  * Actions
  */
-#define ACTION_QUEUE_SIZE 	16	// The size needs to be big enough to store all the pending actions 
+#define ACTION_QUEUE_SIZE 	32	// The size needs to be big enough to store all the pending actions 
                                 // Need to allow +1 to separate the ends of the cyclic buffer so need to 
                                 // move the next power of two since cyclic wrapping is done with a bitmask.
                                 // 16 is safer as we have wait actions

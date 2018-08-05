@@ -5,8 +5,6 @@
 
 #define NUM_EXPRESSIONS 100
 #define NUM_RULES       50
-#define NUM_OPERANDS    200
-#define NUM_ACTIONS     20
 
 typedef enum {
     NOP         =232,   // No action Operation

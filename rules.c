@@ -3,6 +3,7 @@
 #include "events.h"
 #include "romops.h"
 #include "actionQueue.h"
+#include "computeActions.h"
 
 // forward declarations
 BYTE newRule(void);
@@ -67,18 +68,22 @@ void runRules(void) {
 
 void doActions(BYTE nvi) {
     ACTION_T action;
+    BYTE op;
     while (1) {
-        action.op = getNv(nvi++);
+        op = getNv(nvi++);
         action.arg = getNv(nvi++);
         
         switch(action.op) {
             case DELAY:
+                action.op = ACTION_OPCODE_DELAY;
             case SEND_ON:
+                action.op = ACTION_OPCODE_SEND_ON;
             case SEND_OFF:
-                pushAction(action);
+                action.op = ACTION_OPCODE_SEND_OFF;
                 break;
             default: return;
         }
+        pushAction(action);
     }
     nextQueue();
 }
