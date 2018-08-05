@@ -41,33 +41,24 @@
 #include "actionQueue.h"
 #include "queue.h"
 
-BYTE normalReadIdx;                   // index of the next to read
-BYTE normalWriteIdx;                  // index of the next to write
-ACTION_T normalQueueBuf[ACTION_NORMAL_QUEUE_SIZE];   // the actual cyclic buffer space
-Queue normalQueue;
-
-BYTE expeditedReadIdx;                   // index of the next to read
-BYTE expeditedWriteIdx;                  // index of the next to write
-ACTION_T expeditedQueueBuf[ACTION_EXPEDITED_QUEUE_SIZE];   // the actual cyclic buffer space
-Queue expeditedQueue;
-
-static BOOL expedited;
+//BYTE normalReadIdx[NUM_ACTION_QUEUES];                   // index of the next to read
+//BYTE normalWriteIdx[NUM_ACTION_QUEUES];                  // index of the next to write
+ACTION_T normalQueueBuf[ACTION_QUEUE_SIZE][NUM_ACTION_QUEUES];   // the actual cyclic buffer space
+Queue normalQueue[NUM_ACTION_QUEUES];
+static BYTE currentPushQueue;
 
 /**
  * Initialise the action queue.
  */
 void actionQueueInit(void) {
-    normalQueue.size = ACTION_NORMAL_QUEUE_SIZE;
-	normalQueue.readIdx = 0;
-	normalQueue.writeIdx = 0;
-    normalQueue.queue = normalQueueBuf;
-    
-    expeditedQueue.size = ACTION_EXPEDITED_QUEUE_SIZE;
-    expeditedQueue.readIdx = 0;
-	expeditedQueue.writeIdx = 0;
-    expeditedQueue.queue = expeditedQueueBuf;
-    
-    expedited = FALSE;
+    BYTE i;
+    for (i=0; i<NUM_ACTION_QUEUES;i++) {
+        normalQueue[i].size = ACTION_QUEUE_SIZE;
+        normalQueue[i].readIdx = 0;
+        normalQueue[i].writeIdx = 0;
+        normalQueue[i].queue = normalQueueBuf[i];
+    }
+    currentPushQueue = 0;
 }
 
 /**
@@ -76,10 +67,7 @@ void actionQueueInit(void) {
  * @param a the action to be processed
  */
 BOOL pushAction(ACTION_T a) {
-    if (expedited) {
-        return push(&expeditedQueue, a);
-    }
-    return push(&normalQueue, a);
+    return push(&(normalQueue[currentPushQueue]), a);
 }
 
 
@@ -89,8 +77,8 @@ BOOL pushAction(ACTION_T a) {
  *
  * @return the action
  */
-ACTION_T getAction(void) {
-	return peekActionQueue(0);
+ACTION_T getAction(BYTE q) {
+	return peekActionQueue(q, 0);
 }
 
 /**
@@ -98,12 +86,8 @@ ACTION_T getAction(void) {
  *
  * @return the next action
  */
-ACTION_T popAction(void) {
-    ACTION_T ret;
-    ret = pop(&expeditedQueue);
-    if (ret.op != NOP) return ret;
-    ret = pop(&normalQueue);
-    return ret;
+ACTION_T popAction(BYTE q) {
+    return pop(&(normalQueue[q]));
 }
 
 
@@ -111,8 +95,8 @@ ACTION_T popAction(void) {
 /**
  * Mark as having completed the current action.
  */
-void doneAction(void) {
-	popAction();
+void doneAction(BYTE q) {
+	popAction(q);
 }
 
 
@@ -121,13 +105,9 @@ void doneAction(void) {
  * @param index the item index within the queue
  * @return the Action or NO_ACTION 
  */
-ACTION_T peekActionQueue(unsigned char index) {
-    if (index < quantity(&expeditedQueue)) {
-        return peek(&expeditedQueue, index);
-    }
-    index -= quantity(&expeditedQueue);
-    if (index < quantity(&normalQueue)) {
-        return peek(&normalQueue, index);
+ACTION_T peekActionQueue(BYTE q, unsigned char index) {
+    if (index < quantity(&(normalQueue[q]))) {
+        return peek(&(normalQueue[q]), index);
     }
     return NO_ACTION;
 }
@@ -137,25 +117,13 @@ ACTION_T peekActionQueue(unsigned char index) {
  * Delete an item in the queue. Replace the item with NO_ACTION.
  * @param index the item index within the queue
  */
-void deleteActionQueue(unsigned char index) {
-    if (index <= quantity(&expeditedQueue)) {
-        delete(&expeditedQueue, index);
-    } else {
-        index -= quantity(&expeditedQueue);
-        delete(&normalQueue, index);
+void deleteActionQueue(BYTE q, unsigned char index) {
+     delete(&(normalQueue[q]), index);
+}
+
+void nextQueue(void) {
+    currentPushQueue++;
+    if (currentPushQueue >= NUM_ACTION_QUEUES) {
+        currentPushQueue = 0;
     }
-}
-
-/**
- * Set the expedited flag so that subsequent pushes are added to the front of the queue.
- */
-void setExpeditedActions(void) {
-    expedited = TRUE;
-}
-
-/**
- * Clear the expedited flag so that subsequent pushes are added to the end of the queue.
- */
-void setNormalActions(void) {
-    expedited = FALSE;
 }

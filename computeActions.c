@@ -3,7 +3,7 @@
 #include "actionQueue.h"
 
 // forward declarations
-void doWait(unsigned int duration);
+void doWait(BYTE q, unsigned int duration);
 
 static TickValue startWait;
 
@@ -12,25 +12,28 @@ static TickValue startWait;
  * actions have finished and the next needs to be started.
  */
 void processActions(void) {
-    ACTION_T action = getAction();
+    BYTE q;
+    for (q=0; q<NUM_ACTION_QUEUES; q++) {
+        ACTION_T action = getAction(q);
 
-    if (action.op == NOP) {
-        doneAction();
-        return;
-    }
-    // Check for SOD
+        if (action.op == NOP) {
+            doneAction(q);
+            continue;
+        }
+        // Check for SOD
 
-    if (action.op == DELAY) {
-        doWait(action.arg);
-        return;
-    }
-    if (action.op == SEND_ON) {
-        sendProducedEvent(action.arg, TRUE);
-        return;
-    }
-    if (action.op == SEND_OFF) {
-        sendProducedEvent(action.arg, FALSE);
-        return;
+        if (action.op == DELAY) {
+            doWait(q, action.arg);
+            continue;
+        }
+        if (action.op == SEND_ON) {
+            sendProducedEvent(action.arg, TRUE);
+            continue;
+        }
+        if (action.op == SEND_OFF) {
+            sendProducedEvent(action.arg, FALSE);
+            continue;
+        }
     }
 }
 
@@ -39,7 +42,7 @@ void processActions(void) {
  * 
  * @param duration in 0.1second units
  */
-void doWait(unsigned int duration) {
+void doWait(BYTE q, unsigned int duration) {
     // start the timer
     if (startWait.Val == 0) {
         startWait.Val = tickGet();
@@ -47,7 +50,7 @@ void doWait(unsigned int duration) {
     } else {
         // check if timer expired
         if ((tickTimeSince(startWait) > ((long)duration * (long)HUNDRED_MILI_SECOND))) {
-            doneAction();
+            doneAction(q);
             startWait.Val = 0;
             return;
         } 

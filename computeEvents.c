@@ -27,6 +27,7 @@
 */ 
 
 #include "events.h"
+
 /*
  * File:   mioEvents.c
  * Author: Ian Hogg
@@ -56,6 +57,9 @@
 RxBuffer rxBuffers[NUM_BUFFERS];
 #pragma udata
 static BYTE bufferIndex;    // where to write the next event
+static TickValue now;
+
+extern BYTE timeLimit;
 
 // forward declarations
 
@@ -67,7 +71,7 @@ void computeEventsInit(void) {
 
 /**
  * Process the consumed events. 
- * 
+ * Store the events in the rxBuffer along with the time received.
  * 
  * @param tableIndex the required action to be performed.
  * @param msg the full CBUS message so that OPC  and DATA can be retrieved.
@@ -87,8 +91,8 @@ void processEvent(BYTE tableIndex, BYTE * msg) {
     rxBuffers[bufferIndex].on = opc&EVENT_ON_MASK;
     /* disable the timer to prevent roll over of the lower 16 bits while before/after reading of the extension */
     TMR_IE = 0;
-    rxBuffers[bufferIndex].time.bytes.b1 = timerExtension1;
-    rxBuffers[bufferIndex].time.bytes.b2 = timerExtension2;
+    rxBuffers[bufferIndex].time.bytes.b1 = timerExtension1;     // the least significant byte
+    rxBuffers[bufferIndex].time.bytes.b2 = timerExtension2;     // this is the most significant byte
     /* enable the timer*/
     TMR_IE = 1;
         
@@ -102,14 +106,36 @@ BOOL getDefaultProducedEvent(PRODUCER_ACTION_T paction) {
 }
 
 /*
- * Count the number of times we have received the specified event within the specified time
+ * Count the number of times we have received the specified event within the specified timeLimit time
  */
 BYTE received(BYTE eventNo, BOOL on) {
-    BYTE i;
+    BYTE bi;
     BYTE ret = 0;
-    if (rxBuffers[i].index == eventNo) {
-        if (rxBuffers[i].on == on) {
-            ret++;
+    BYTE i;
+    
+    if (bufferIndex == 0) {
+        bi = NUM_BUFFERS;
+    } else {
+        bi = bufferIndex - 1;
+    }
+    
+    now.Val = tickGet();
+    
+    // go backwards through the buffer list until we exceed the time limit
+    for (i=0; i<NUM_BUFFERS; i++) {
+        WORD eventTime = rxBuffers[bi].time.word;
+
+        if ((now.word.w1 - eventTime) > timeLimit) break;
+        if (rxBuffers[bi].index == eventNo) {
+            if (rxBuffers[bi].on == on) {
+                ret++;
+                if (ret == 255) return ret;
+            }
+        }
+        if (bi == 0) {
+            bi = NUM_BUFFERS;
+        } else {
+            i--;
         }
     }
     return ret;

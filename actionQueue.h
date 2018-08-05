@@ -39,11 +39,10 @@
 
 extern void actionQueueInit(void);
 extern BOOL pushAction(ACTION_T a);
-extern ACTION_T getAction(void);
-extern void doneAction(void);
-extern ACTION_T pullAction(void);
-extern ACTION_T peekActionQueue(unsigned char index);
-extern void deleteActionQueue(unsigned char index);
-extern void setExpeditedActions(void);
-extern void setNormalActions(void);
+extern ACTION_T getAction(BYTE q);
+extern void doneAction(BYTE q);
+extern ACTION_T pullAction(BYTE q);
+extern ACTION_T peekActionQueue(BYTE q, unsigned char index);
+extern void deleteActionQueue(BYTE q, unsigned char index);
+extern void nextQueue(void);
 #endif

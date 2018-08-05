@@ -38,15 +38,16 @@
  * Created on 10 April 2017, 10:26
  */
 /** TODOs
- * * Handle ARDAT
- * * receive to check times
- * * Multiple actionQueues
+ * * Work out if we need the event hash
  * 
  * DONES:
  * * Move rules, expressions, operands, actions to Flash
  * * Run rules expression regularly, 
  * * Store result of rule expression so can detect changes
  * * Execute actions on result of expression
+ * * Handle ARDAT
+ * * receive to check times
+ * * Multiple actionQueues
  * 
  */
 /*

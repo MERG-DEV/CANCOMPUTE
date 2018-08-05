@@ -18,6 +18,7 @@ BYTE ruleIndex;
 BYTE expressionIndex;
 RuleState ruleState;
 BYTE nvPtr;
+BYTE timeLimit;
 static BOOL results[NUM_RULES];
 
 rom BYTE romRuleIndex;
@@ -45,15 +46,20 @@ void ruleInit(void) {
 void runRules(void) {
     BYTE rule;
     BYTE result;
+    BYTE b;
     for (rule=0; rule<NUM_RULES; rule++) {
         if (rule > ruleIndex) break;
-        result = execute(rules[rule].expression);
+        b = readFlashBlock(&(rules[rule].expression));
+        result = execute(b);
         if (results[rule] != result) {
             results[rule] = result;
+            timeLimit = readFlashBlock(&(rules[rule].within));
             if (result) {
-                doActions(rules[rule].actions);
+                b = readFlashBlock(&(rules[rule].actions));
+                doActions(b);
             } else {
-                doActions(rules[rule].thens);
+                b = readFlashBlock(&(rules[rule].thens));
+                doActions(b);
             }
         }
     }
@@ -74,6 +80,7 @@ void doActions(BYTE nvi) {
             default: return;
         }
     }
+    nextQueue();
 }
 
 void load(void) {
