@@ -64,8 +64,7 @@ TOKEN : /* KEYWORDS and OPERATORS*/
   | < COMMA: "," >
   | < DEFINE: "define" >
   | < DELAY: "delay" >
-  | < IF: "if" >
-  | < RECEIVE: "receive" >
+  | < WHEN: "when" >
   | < SEND: "send" >
   | < THEN: "then" >
   | < WITHIN: "within" >
@@ -119,7 +118,7 @@ ASTRule Rule() #Rule:
 {
 }
 {
-  <IF> <RECEIVE> BooleanExpression() <WITHIN> Time() ActionList() (<THEN> ActionList())? <SEMICOLON>
+  <WHEN> BooleanExpression() <WITHIN> Time() ActionList() (<THEN> ActionList())? <SEMICOLON>
     {
     return jjtThis;
   }}
@@ -179,11 +178,11 @@ ASTAction Action() #Action:
     return jjtThis;
   }}
 ASTOrExpression OrExpression() #OrExpression:{
-}{  AndExpression() ( <OR> AndExpression() )*
+}{  AndExpression() ( <OR> AndExpression() )?
     {
     return jjtThis;
   }}ASTAndExpression AndExpression() #AndExpression:{
-}{  UnaryBooleanExpression() ( <AND> UnaryBooleanExpression() )*
+}{  UnaryBooleanExpression() ( <AND> UnaryBooleanExpression() )?
     {
     return jjtThis;
   }
@@ -230,17 +229,16 @@ ASTPrimaryBooleanExpression PrimaryBooleanExpression() #PrimaryBooleanExpression
     jjtThis.setOpCode(ASTPrimaryBooleanExpression.OpCodes.EXPRESSION);
     return jjtThis;
   }
-|  Message() ((t=<AFTER>|t=<BEFORE>) {
+|  Message() (t=<AFTER>|t=<BEFORE>) Message()
+  {
   	if ("after".equals(t.image)) {
   	  jjtThis.setOpCode(ASTPrimaryBooleanExpression.OpCodes.AFTER);
   	} else {
   	  jjtThis.setOpCode(ASTPrimaryBooleanExpression.OpCodes.BEFORE);
   	}
   	return jjtThis;
-  } Message() )?
-  {
-    return jjtThis;
-  }
+  } 
+  
 }
 
 
