@@ -197,11 +197,7 @@ ASTUnaryBooleanExpression UnaryBooleanExpression() #UnaryBooleanExpression:
   Token t=null;
 }
 {
-  (t=<NOT> { jjtThis.setOp(true); }) UnaryBooleanExpression()
-  {
-    return jjtThis;
-  }
-|  PrimaryBooleanExpression()
+  (t=<NOT> { jjtThis.setOp(true); }) PrimaryBooleanExpression()
   {
     return jjtThis;
   }}
