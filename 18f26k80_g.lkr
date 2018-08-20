@@ -14,16 +14,13 @@ LIBPATH .
     FILES clib.lib
     FILES p18f26k80.lib
   #FI
-
 #FI
 
 CODEPAGE   NAME=bootloader START=0x0               END=0x7FF          PROTECTED
 CODEPAGE   NAME=vectors    START=0x800             END=0x81F
 CODEPAGE   NAME=parameters START=0x820             END=0x84F
-CODEPAGE   NAME=page       START=0x0850            END=0xEF7F
-
-//CODEPAGE   NAME=page2      START=0x8000            END=0xEF7F
-CODEPAGE   NAME=persist    START=0xEF80            END=0xFFFF         PROTECTED
+CODEPAGE   NAME=page       START=0x0850            END=0x7A4B
+CODEPAGE   NAME=persist    START=0x7A4C            END=0x7FFF         PROTECTED
 CODEPAGE   NAME=userid     START=0x200000          END=0x200007       PROTECTED
 CODEPAGE   NAME=cfgmem     START=0x300000          END=0x30000D       PROTECTED
 CODEPAGE   NAME=devid      START=0x3FFFFE          END=0x3FFFFF       PROTECTED
@@ -45,10 +42,10 @@ DATABANK   NAME=gpr5       START=0x500             END=0x5FF
 DATABANK   NAME=gpr6       START=0x600             END=0x6FF
 DATABANK   NAME=gpr7       START=0x700             END=0x7FF
 DATABANK   NAME=gpr8       START=0x800             END=0x8FF
-DATABANK   NAME=gpr9       START=0x900             END=0x937
-DATABANK   NAME=large_event_hash      START=0x938  END=0xBFF          PROTECTED
-DATABANK   NAME=gpr12      START=0xC00             END=0xCFF
-DATABANK   NAME=gpr13      START=0xD00             END=0xDFF
+//DATABANK   NAME=gpr9       START=0x900             END=0x9F0
+DATABANK   NAME=large_rx_buffer       START=0x900  END=0xBFF          PROTECTED // size 0x200
+DATABANK   NAME=gpr12      START=0xC00             END=0xCFF                    // debug stack
+DATABANK   NAME=gpr13      START=0xD00             END=0xDFF                    // stack
 DATABANK   NAME=gpr14      START=0xE00             END=0xE40
 DATABANK   NAME=sfr14      START=0xE41             END=0xEFF          PROTECTED
 DATABANK   NAME=sfr15      START=0xF00             END=0xF5F          PROTECTED
@@ -63,7 +60,7 @@ ACCESSBANK NAME=accesssfr  START=0xF60             END=0xFFF          PROTECTED
   #FI
 #FI
 
-SECTION NAME=large_event_hash RAM=large_event_hash
+SECTION NAME=large_rx_buffer RAM=large_rx_buffer
 //SECTION    NAME=BOOT       ROM=bootloader
 //SECTION    NAME=APP        ROM=page
 //SECTION    NAME=APP        ROM=page2

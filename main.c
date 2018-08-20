@@ -163,9 +163,9 @@ void LOW_INT_VECT(void)
 #endif
 
 static TickValue   startTime;
-static BOOL        started = FALSE;
+//static BOOL        started = FALSE;
 static TickValue   lastActionPollTime;
-static TickValue   lastRulePollTime;
+//static TickValue   lastRulePollTime;
 
 #ifdef BOOTLOADER_PRESENT
 // ensure that the bootflag is zeroed
@@ -188,6 +188,7 @@ void main(void) {
 int main(void) @0x800 {
 #endif
     BYTE sodDelay;
+    BOOL started = FALSE;
     initRomOps();
 #ifdef NV_CACHE
     // If we are using the cache make sure we get the NVs early in initialisation
@@ -198,7 +199,7 @@ int main(void) @0x800 {
 
     startTime.Val = tickGet();
     lastActionPollTime.Val = startTime.Val;
-    lastRulePollTime.Val = startTime.Val;
+//    lastRulePollTime.Val = startTime.Val;
     
     initialise(); 
     sodDelay = getNv(NV_SOD_DELAY);
@@ -211,16 +212,16 @@ int main(void) @0x800 {
         checkCBUS();    // Consume any CBUS message and act upon it
         FLiMSWCheck();  // Check FLiM switch for any mode changes
         
-        if (started) {
+//      if (started) {
             if (tickTimeSince(lastActionPollTime) > 100*ONE_MILI_SECOND) {
                 lastActionPollTime.Val = tickGet();
                 processActions();
-            }
-            if (tickTimeSince(lastRulePollTime) > 100*ONE_MILI_SECOND) {
-                lastRulePollTime.Val = tickGet();
+//            }
+//            if (tickTimeSince(lastRulePollTime) > 100*ONE_MILI_SECOND) {
+//                lastRulePollTime.Val = tickGet();
                 runRules();
             }
-        }
+//        }
         // Check for any flashing status LEDs
         checkFlashing();
      } // main loop

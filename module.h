@@ -59,7 +59,7 @@ extern "C" {
 //#define SAFETY
 
 // Whether NVs are cached in RAM
-#define NV_CACHE
+//#define NV_CACHE
     
     
 /************************* END OF OPTIONS ************************/
