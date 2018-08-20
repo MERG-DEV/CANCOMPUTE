@@ -308,6 +308,12 @@ void factoryReset(void) {
 void factoryResetFlash(void) {
     factoryResetGlobalNv();
     clearAllEvents();
+    
+    writeFlashByte((BYTE*)(AT_RULEINDEX), (BYTE)0);
+    writeFlashByte((BYTE*)(AT_EXPRESSIONINDEX), (BYTE)0);
+    writeFlashByte((BYTE*)(AT_RULESTATE), (BYTE)0);
+    writeFlashByte((BYTE*)(AT_NVPTR), (BYTE)1);
+
     flushFlashImage();
 }
 

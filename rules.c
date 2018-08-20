@@ -48,8 +48,7 @@ void runRules(void) {
     BYTE rule;
     BYTE result;
     BYTE b;
-    for (rule=0; rule<NUM_RULES; rule++) {
-        if (rule > ruleIndex) break;
+    for (rule=0; rule<ruleIndex; rule++) {
         b = readFlashBlock(&(rules[rule].expression));
         result = execute(b);
         if (results[rule] != result) {
