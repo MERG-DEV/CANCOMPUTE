@@ -1,0 +1,14 @@
+/* 
+ * This is the language for defining CANCOMPUTE operation
+ */
+
+// define some events first
+define $P13 = NN:0000 EN:0101;
+define $P14 = NN:0000 EN:0102;
+define $P15 = NN:0000 EN:0111;
+define $P16 = NN:0000 EN:0112;
+define $R1 = NN:0000 EN:0001;
+//3456789012345678901234567890123456789012345678901234567890
+//       1         2         3         4         5
+// Now define some rules
+when count(on$P13)>0 and count(on$P14)>0 and count(on$P16)>0 and count(off$P15)>0 within 5sec send on$R1;

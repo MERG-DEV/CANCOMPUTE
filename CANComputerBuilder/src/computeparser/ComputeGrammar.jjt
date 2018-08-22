@@ -178,11 +178,11 @@ ASTAction Action() #Action:
     return jjtThis;
   }}
 ASTOrExpression OrExpression() #OrExpression:{
-}{  AndExpression() ( <OR> AndExpression() )?
+}{  AndExpression() ( <OR> AndExpression() )*
     {
     return jjtThis;
   }}ASTAndExpression AndExpression() #AndExpression:{
-}{  UnaryBooleanExpression() ( <AND> UnaryBooleanExpression() )?
+}{  UnaryBooleanExpression() ( <AND> UnaryBooleanExpression() )*
     {
     return jjtThis;
   }

@@ -131,21 +131,41 @@ public class NvVisitor implements ComputeGrammarVisitor {
 
 	@Override
 	public Object visit(ASTOrExpression node, Object data) {
-		if (node.jjtGetNumChildren() >  1) {
-			System.out.print(" OR ");
-			System.out.println("NV#"+nvIndex++ +"="+NvOpCode.OR.code()+"\t\t//OR");
+		int depth = 0;
+		while (true) {
+			Node n;
+			if (node.jjtGetNumChildren() >  depth+1) {
+				System.out.println("NV#"+nvIndex++ +"="+NvOpCode.OR.code()+"\t\t//OR");
+				n = node.jjtGetChild(depth);
+				n.jjtAccept(this, data);
+				depth++;
+			} else {
+				n = node.jjtGetChild(depth);
+				n.jjtAccept(this, data);
+				depth++;
+				break;
+			}
 		}
-		node.childrenAccept(this, data);
 		return null;
 	}
 
 	@Override
 	public Object visit(ASTAndExpression node, Object data) {
-		if (node.jjtGetNumChildren() >  1) {
-			System.out.print(" AND ");
-			System.out.println("NV#"+nvIndex++ +"="+NvOpCode.AND.code()+"\t\t//AND");
+		int depth = 0;
+		while (true) {
+			Node n;
+			if (node.jjtGetNumChildren() >  depth+1) {
+				System.out.println("NV#"+nvIndex++ +"="+NvOpCode.AND.code()+"\t\t//AND");
+				n = node.jjtGetChild(depth);
+				n.jjtAccept(this, data);
+				depth++;
+			} else {
+				n = node.jjtGetChild(depth);
+				n.jjtAccept(this, data);
+				depth++;
+				break;
+			}
 		}
-		node.childrenAccept(this, data);
 		return null;
 	}
 
