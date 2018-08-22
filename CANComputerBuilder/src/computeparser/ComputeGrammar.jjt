@@ -186,10 +186,6 @@ ASTAction Action() #Action:
     {
     return jjtThis;
   }
-| RelationalExpression()
-  {
-    return jjtThis;
-  }
 }
 
 ASTUnaryBooleanExpression UnaryBooleanExpression() #UnaryBooleanExpression:
@@ -197,7 +193,7 @@ ASTUnaryBooleanExpression UnaryBooleanExpression() #UnaryBooleanExpression:
   Token t=null;
 }
 {
-  (t=<NOT> { jjtThis.setOp(true); }) PrimaryBooleanExpression()
+  (t=<NOT> { jjtThis.setOp(true); })* PrimaryBooleanExpression()
   {
     return jjtThis;
   }}
@@ -220,6 +216,7 @@ ASTPrimaryBooleanExpression PrimaryBooleanExpression() #PrimaryBooleanExpression
   Token t = null;
 }
 {
+  LOOKAHEAD(2)
   <LPAREN> BooleanExpression() <RPAREN>
   {
     jjtThis.setOpCode(ASTPrimaryBooleanExpression.OpCodes.EXPRESSION);
@@ -233,7 +230,11 @@ ASTPrimaryBooleanExpression PrimaryBooleanExpression() #PrimaryBooleanExpression
   	  jjtThis.setOpCode(ASTPrimaryBooleanExpression.OpCodes.BEFORE);
   	}
   	return jjtThis;
-  } 
+  }
+  | RelationalExpression()
+  {
+    return jjtThis;
+  }
   
 }
 

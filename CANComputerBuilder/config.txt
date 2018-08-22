@@ -11,3 +11,4 @@ define $event4 = NN:4441 EN:4442;
 // Now define some rules
 when count(on$event1)>1 within 2sec send on$event2;
 when count(on$event3) > 10 within 2sec send on$event4 then delay 1sec, send off$event4;
+when count(on$event1)>0 and count(off$event3) within 1sec send on$event2;
