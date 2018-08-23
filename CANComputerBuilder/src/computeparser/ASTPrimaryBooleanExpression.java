@@ -2,14 +2,13 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=false,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package computeparser;
 
-import computeparser.ASTPrimaryExpression.OpCodes;
-
 public
 class ASTPrimaryBooleanExpression extends SimpleNode {
 	public enum OpCodes {
 		EXPRESSION,
 		BEFORE,
-		AFTER
+		AFTER, 
+		STATE
 	};
 	OpCodes opCode;
   public ASTPrimaryBooleanExpression(int id) {

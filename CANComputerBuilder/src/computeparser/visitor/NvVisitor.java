@@ -13,6 +13,7 @@ import computeparser.ASTMessage;
 import computeparser.ASTMessageState;
 import computeparser.ASTOrExpression;
 import computeparser.ASTPrimaryBooleanExpression;
+import computeparser.ASTPrimaryBooleanExpression.OpCodes;
 import computeparser.ASTPrimaryIntegerExpression;
 import computeparser.ASTRelationalExpression;
 import computeparser.ASTRule;
@@ -197,7 +198,15 @@ public class NvVisitor implements ComputeGrammarVisitor {
 	public Object visit(ASTRelationalExpression node, Object data) {
 		if (node.jjtGetNumChildren() >  1) {
 			String op = node.getOpCode();
-			if ("<".equals(op)) {
+			if ("is".equals(op)) {
+				System.out.println("NV#"+nvIndex++ +"="+NvOpCode.EQUALS.code()+"\t\t//EQUALS");
+			} else if ("equals".equals(op)) {
+				System.out.println("NV#"+nvIndex++ +"="+NvOpCode.EQUALS.code()+"\t\t//EQUALS");
+			} else if ("=".equals(op)) {
+				System.out.println("NV#"+nvIndex++ +"="+NvOpCode.EQUALS.code()+"\t\t//EQUALS");
+			} else if ("!=".equals(op)) {
+				System.out.println("NV#"+nvIndex++ +"="+NvOpCode.NOTEQUALS.code()+"\t\t//NOT EQUALS");
+			} else if ("<".equals(op)) {
 				System.out.println("NV#"+nvIndex++ +"="+NvOpCode.LESS.code()+"\t\t//LESS THAN");
 			} else if ("<=".equals(op)) {
 				System.out.println("NV#"+nvIndex++ +"="+NvOpCode.LESSEQUAL.code()+"\t\t//LESS OR EQUALS");
@@ -248,6 +257,16 @@ public class NvVisitor implements ComputeGrammarVisitor {
 
 	@Override
 	public Object visit(ASTPrimaryBooleanExpression node, Object data) {
+		if (node.getOpCode() == OpCodes.STATE) {
+			ASTMessageState ms = (ASTMessageState) node.jjtGetChild(1);
+			if (ms.getState() == MessageState.ON) {
+				System.out.println("NV#"+nvIndex++ +"="+NvOpCode.STATE_ON.code()+"\t\t//STATE_ON");
+			} else {
+				System.out.println("NV#"+nvIndex++ +"="+NvOpCode.STATE_OFF.code()+"\t\t//STATE_OFF");
+			}
+			node.jjtGetChild(0).jjtAccept(this, null);
+			return null;
+		}
 		node.childrenAccept(this, data);
 		return null;
 	}
@@ -255,7 +274,8 @@ public class NvVisitor implements ComputeGrammarVisitor {
 
 	@Override
 	public Object visit(ASTMessage node, Object data) {
-		node.childrenAccept(this, data);
+		
+		node.jjtGetChild(0).jjtAccept(this, null);
 		return null;
 	}
 

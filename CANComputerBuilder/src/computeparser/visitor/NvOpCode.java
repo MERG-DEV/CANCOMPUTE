@@ -1,6 +1,8 @@
 package computeparser.visitor;
 
 public enum NvOpCode {
+	STATE_ON	(231),	// followed by one NV giving the event index
+	STATE_OFF	(232),	// followed by one NV giving the event index
 	BEFORE		(233),	// followed by two NV giving the event indexes
 	AFTER		(234),	// followed by two NV giving the event indexes
 	THEN		(235),	// followed by sequence of actions

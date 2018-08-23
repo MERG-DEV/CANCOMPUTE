@@ -60,6 +60,7 @@ TOKEN : /* KEYWORDS and OPERATORS*/
   | < NN: "NN:" >
   | < EN: "EN:" >
   | < COUNT: "count" >
+  | < STATE: "state" >
   | < SEMICOLON: ";" >
   | < COMMA: "," >
   | < DEFINE: "define" >
@@ -72,6 +73,7 @@ TOKEN : /* KEYWORDS and OPERATORS*/
   | < RPAREN: ")" >
   | < EQ: "=" >
   | < LONGEQ: "equals" >
+  | < ISEQ: "is" >
   | < NOT: "not" >
   | < NE: "!=" >
   | < LT: "< " >
@@ -204,7 +206,7 @@ ASTRelationalExpression RelationalExpression() #RelationalExpression:
 }
 {
     
-        AdditiveExpression() ( ( t=<LT> | t=<LE> | t=<GT> | t=<GE> | t=<EQ> | t=<LONGEQ> | t=<NE>) AdditiveExpression() )*
+        AdditiveExpression() ( ( t=<LT> | t=<LE> | t=<GT> | t=<GE> | t=<EQ> | t=<LONGEQ> | t=<ISEQ> | t=<NE>) AdditiveExpression() )*
         {
           if (t != null) jjtThis.setOpCode(t.image);
           return jjtThis;
@@ -233,6 +235,11 @@ ASTPrimaryBooleanExpression PrimaryBooleanExpression() #PrimaryBooleanExpression
   }
   | RelationalExpression()
   {
+    return jjtThis;
+  }
+  |  <STATE> <LPAREN> Identifier() (<EQ> | <LONGEQ> | <ISEQ>) MessageState() <RPAREN>
+  {
+    jjtThis.setOpCode(ASTPrimaryBooleanExpression.OpCodes.STATE);	// we'll change to off later if necessary
     return jjtThis;
   }
   
