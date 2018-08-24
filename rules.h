@@ -7,7 +7,9 @@
 #define NUM_RULES       50
 
 typedef enum {
-    NOP         =232,   // No action Operation
+    NOP         =230,   // No action Operation
+    STATE_ON	=231,	// followed by two NV giving the event indexes
+    STATE_OFF	=232,	// followed by two NV giving the event indexes
     BEFORE		=233,	// followed by two NV giving the event indexes
 	AFTER		=234,	// followed by two NV giving the event indexes
 	THEN		=235,	// Followed by sequence of actions
@@ -32,7 +34,7 @@ typedef enum {
 	END			=254
 } OpCodes;
 
-#define MIN_RULE_OPCODE BEFORE
+#define MIN_RULE_OPCODE STATE_ON
 
 #include "module.h"
 #include "cancompute.h"

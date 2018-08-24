@@ -144,17 +144,34 @@ void loadExpression(BYTE expression) {
 		writeFlashByte((BYTE*)(&(expressions[expression].opCode)), nv);
 		
         switch(nv) {
+
+            case BEFORE:
+            case AFTER:
+                // Two events
+                val = getNv(nvPtr++);
+                writeFlashByte((BYTE*)(&(expressions[expression].op1.eventNo)), val);
+                if (val > (NUM_EVENTS -1)) {ruleState = INVALID_EVENT; return;}
+                
+                val = getNv(nvPtr++);
+                writeFlashByte((BYTE*)(&(expressions[expression].op2.eventNo)), val);
+                if (val > (NUM_EVENTS -1)) {ruleState = INVALID_EVENT; return;}
+                break;
             case COUNT_ON:
             case COUNT_OFF:
+            case STATE_ON:
+            case STATE_OFF:
+                // One event
                 val = getNv(nvPtr++);
                 writeFlashByte((BYTE*)(&(expressions[expression].op1.eventNo)), val);
                 if (val > (NUM_EVENTS -1)) {ruleState = INVALID_EVENT; return;}
                 break;
             case INTEGER:
+                // One integer
                 val = getNv(nvPtr++);
                 writeFlashByte((BYTE*)(&(expressions[expression].op1.integer)), val);
                 break;
             case NOT:
+                // One expression
                 expr_index = newExpression();
                 if (expr_index == TOO_MANY) {ruleState = TOO_MANY_EXPRESSIONS; return;}
 				writeFlashByte((BYTE*)(&(expressions[expression].op1.expression)), expr_index);
@@ -171,6 +188,7 @@ void loadExpression(BYTE expression) {
 			case NOTEQUALS:
 			case PLUS:
 			case MINUS:
+                // Two expressions
                 expr_index = newExpression();
                 if (expr_index == TOO_MANY) {ruleState = TOO_MANY_EXPRESSIONS; return;}
 				writeFlashByte((BYTE*)(&(expressions[expression].op1.expression)), expr_index);
@@ -216,6 +234,21 @@ BYTE execute(BYTE e) {
     if (op1 >= NUM_EVENTS) return 0;
     
     switch(opCode) {
+        case BEFORE:
+            if (op1 >= NUM_EVENTS) return 0;
+            if (op2 >= NUM_EVENTS) return 0;
+            // return true if event op1 is before op2 and both are present
+            return sequence(op1, op2);
+        case AFTER:
+            if (op1 >= NUM_EVENTS) return 0;
+            if (op2 >= NUM_EVENTS) return 0;
+            return sequence(op2, op1);
+        case STATE_ON:
+            if (op1 >= NUM_EVENTS) return 0;
+            return (currentEventState[op1] != 0);
+        case STATE_OFF:
+            if (op1 >= NUM_EVENTS) return 0;
+            return (currentEventState[op1] == 0);
         case COUNT_ON:
             if (op1 >= NUM_EVENTS) return 0;
             return received(op1, TRUE);

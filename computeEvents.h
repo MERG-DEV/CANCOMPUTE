@@ -92,6 +92,8 @@ extern void processActions(void);
 extern BYTE findEventByEV1(BYTE ev);
 extern BYTE received(BYTE eventNo, BOOL on);
 extern void doArdat(void);
+extern BYTE sequence (BYTE event1, BYTE event2);
+extern BYTE currentEventState[NUM_EVENTS];
 
 typedef struct {
     BOOL on;

@@ -62,10 +62,15 @@ static TickValue now;
 extern BYTE timeLimit;
 
 // forward declarations
+BYTE currentEventState[NUM_EVENTS]; // use a BYTE even though a BOOL would do
 
 
 void computeEventsInit(void) {
+    for (bufferIndex=0; bufferIndex < NUM_EVENTS; bufferIndex++) {
+        currentEventState[bufferIndex] = 0;
+    }
     bufferIndex=0;
+    
 }
 
 
@@ -95,6 +100,8 @@ void processEvent(BYTE tableIndex, BYTE * msg) {
     rxBuffers[bufferIndex].time.bytes.b2 = timerExtension2;     // this is the most significant byte
     /* enable the timer*/
     TMR_IE = 1;
+    // store current state
+    currentEventState[ev] = opc&EVENT_ON_MASK;
         
     bufferIndex++;
     if (bufferIndex >= NUM_BUFFERS) bufferIndex = 0;
@@ -139,4 +146,49 @@ BYTE received(BYTE eventNo, BOOL on) {
         }
     }
     return ret;
+}
+
+/**
+ *  return TRUE if event1 and event2 are within time and event1 occurs before event2
+ */
+BYTE sequence (BYTE event1, BYTE event2) {
+    BYTE bi;
+    BYTE ret = 0;
+    BYTE i;
+    
+    if (bufferIndex == 0) {
+        bi = NUM_BUFFERS;
+    } else {
+        bi = bufferIndex - 1;
+    }
+    
+    now.Val = tickGet();
+
+    for (i=0; i<NUM_BUFFERS; i++) {
+        WORD eventTime = rxBuffers[bi].time.word;
+
+        if ((now.word.w1 - eventTime) > timeLimit) break;
+        if (rxBuffers[bi].index == event1) {
+            for ( ; i<NUM_BUFFERS; i++) {
+                eventTime = rxBuffers[bi].time.word;
+
+                if ((now.word.w1 - eventTime) > timeLimit) break;
+                if (rxBuffers[bi].index == event2) {
+                    return TRUE;
+                }
+                if (bi == 0) {
+                    bi = NUM_BUFFERS;
+                } else {
+                    i--;
+                }
+            }
+            return FALSE;
+        }
+        if (bi == 0) {
+            bi = NUM_BUFFERS;
+        } else {
+            i--;
+        }
+    }
+    return FALSE;
 }
