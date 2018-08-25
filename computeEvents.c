@@ -151,7 +151,7 @@ BYTE received(BYTE eventNo, BOOL on) {
 /**
  *  return TRUE if event1 and event2 are within time and event1 occurs before event2
  */
-BYTE sequence (BYTE event1, BYTE event2) {
+BYTE sequence (BYTE event1, BOOL oo1, BYTE event2, BOOL oo2) {
     BYTE bi;
     BYTE ret = 0;
     BYTE i;
@@ -168,12 +168,12 @@ BYTE sequence (BYTE event1, BYTE event2) {
         WORD eventTime = rxBuffers[bi].time.word;
 
         if ((now.word.w1 - eventTime) > timeLimit) break;
-        if (rxBuffers[bi].index == event1) {
+        if ((rxBuffers[bi].index == event1) && (rxBuffers[bi].on == oo1)) {
             for ( ; i<NUM_BUFFERS; i++) {
                 eventTime = rxBuffers[bi].time.word;
 
                 if ((now.word.w1 - eventTime) > timeLimit) break;
-                if (rxBuffers[bi].index == event2) {
+                if ((rxBuffers[bi].index == event2) && (rxBuffers[bi].on == oo2)) {
                     return TRUE;
                 }
                 if (bi == 0) {

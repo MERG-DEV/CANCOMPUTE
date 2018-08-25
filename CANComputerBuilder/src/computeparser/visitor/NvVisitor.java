@@ -172,6 +172,7 @@ public class NvVisitor implements ComputeGrammarVisitor {
 
 	@Override
 	public Object visit(ASTIdentifier node, Object data) {
+		//System.out.println("identifier");
 		node.childrenAccept(this, data);
 		int ev = DefinesVisitor.getIndex(node.getName());
 		if (ev == 0) {
@@ -267,6 +268,46 @@ public class NvVisitor implements ComputeGrammarVisitor {
 			node.jjtGetChild(0).jjtAccept(this, null);
 			return null;
 		}
+		if (node.getOpCode() == OpCodes.BEFORE) {
+			ASTMessage ml = (ASTMessage) node.jjtGetChild(0);
+			ASTMessage mr = (ASTMessage) node.jjtGetChild(1);
+			if(((ASTMessageState)(ml.jjtGetChild(0))).getState()==MessageState.ON) {
+				if(((ASTMessageState)(mr.jjtGetChild(0))).getState()==MessageState.ON) {
+					System.out.println("NV#"+nvIndex++ +"="+NvOpCode.BEFORE_ON_ON.code()+"\t\t//BEFORE_ON_ON");
+				} else {
+					System.out.println("NV#"+nvIndex++ +"="+NvOpCode.BEFORE_ON_OFF.code()+"\t\t//BEFORE_ON_OFF");
+				}
+			} else {
+				if(((ASTMessageState)(mr.jjtGetChild(0))).getState()==MessageState.ON) {
+					System.out.println("NV#"+nvIndex++ +"="+NvOpCode.BEFORE_OFF_ON.code()+"\t\t//BEFORE_OFF_ON");
+				} else {
+					System.out.println("NV#"+nvIndex++ +"="+NvOpCode.BEFORE_OFF_OFF.code()+"\t\t//BEFORE_OFF_OFF");
+				}
+			}
+			ml.jjtAccept(this, null);
+			mr.jjtAccept(this, null);
+			return null;
+		}
+		if (node.getOpCode() == OpCodes.AFTER) {
+			ASTMessage ml = (ASTMessage) node.jjtGetChild(0);
+			ASTMessage mr = (ASTMessage) node.jjtGetChild(1);
+			if(((ASTMessageState)(ml.jjtGetChild(0))).getState()==MessageState.ON) {
+				if(((ASTMessageState)(mr.jjtGetChild(0))).getState()==MessageState.ON) {
+					System.out.println("NV#"+nvIndex++ +"="+NvOpCode.AFTER_ON_ON.code()+"\t\t//AFTER_ON_ON");
+				} else {
+					System.out.println("NV#"+nvIndex++ +"="+NvOpCode.AFTER_ON_OFF.code()+"\t\t//AFTER_ON_OFF");
+				}
+			} else {
+				if(((ASTMessageState)(mr.jjtGetChild(0))).getState()==MessageState.ON) {
+					System.out.println("NV#"+nvIndex++ +"="+NvOpCode.AFTER_OFF_ON.code()+"\t\t//AFTER_OFF_ON");
+				} else {
+					System.out.println("NV#"+nvIndex++ +"="+NvOpCode.AFTER_OFF_OFF.code()+"\t\t//AFTER_OFF_OFF");
+				}
+			}	
+			ml.jjtAccept(this, null);
+			mr.jjtAccept(this, null);
+			return null;
+		}
 		node.childrenAccept(this, data);
 		return null;
 	}
@@ -274,8 +315,8 @@ public class NvVisitor implements ComputeGrammarVisitor {
 
 	@Override
 	public Object visit(ASTMessage node, Object data) {
-		
-		node.jjtGetChild(0).jjtAccept(this, null);
+		//System.out.println("message");
+		node.childrenAccept(this, data);
 		return null;
 	}
 

@@ -145,8 +145,14 @@ void loadExpression(BYTE expression) {
 		
         switch(nv) {
 
-            case BEFORE:
-            case AFTER:
+            case BEFORE_ON_ON:
+            case BEFORE_ON_OFF:
+            case BEFORE_OFF_ON:
+            case BEFORE_OFF_OFF:
+            case AFTER_ON_ON:
+            case AFTER_ON_OFF:
+            case AFTER_OFF_ON:
+            case AFTER_OFF_OFF:
                 // Two events
                 val = getNv(nvPtr++);
                 writeFlashByte((BYTE*)(&(expressions[expression].op1.eventNo)), val);
@@ -234,15 +240,38 @@ BYTE execute(BYTE e) {
     if (op1 >= NUM_EVENTS) return 0;
     
     switch(opCode) {
-        case BEFORE:
+        case BEFORE_ON_ON:// return true if event op1 is before op2 and both are present
             if (op1 >= NUM_EVENTS) return 0;
             if (op2 >= NUM_EVENTS) return 0;
-            // return true if event op1 is before op2 and both are present
-            return sequence(op1, op2);
-        case AFTER:
+            return sequence(op1, TRUE, op2, TRUE);
+        case BEFORE_ON_OFF:// return true if event op1 is before op2 and both are present
             if (op1 >= NUM_EVENTS) return 0;
             if (op2 >= NUM_EVENTS) return 0;
-            return sequence(op2, op1);
+            return sequence(op1, TRUE, op2, FALSE);
+        case BEFORE_OFF_ON:// return true if event op1 is before op2 and both are present
+            if (op1 >= NUM_EVENTS) return 0;
+            if (op2 >= NUM_EVENTS) return 0;
+            return sequence(op1, FALSE, op2, TRUE);
+        case BEFORE_OFF_OFF:// return true if event op1 is before op2 and both are present
+            if (op1 >= NUM_EVENTS) return 0;
+            if (op2 >= NUM_EVENTS) return 0;
+            return sequence(op1, FALSE, op2, FALSE);
+        case AFTER_ON_ON:// return true if event op1 is after op2 and both are present
+            if (op1 >= NUM_EVENTS) return 0;
+            if (op2 >= NUM_EVENTS) return 0;
+            return sequence(op2, TRUE, op1, TRUE);
+        case AFTER_ON_OFF:// return true if event op1 is after op2 and both are present
+            if (op1 >= NUM_EVENTS) return 0;
+            if (op2 >= NUM_EVENTS) return 0;
+            return sequence(op2, TRUE, op1, FALSE);
+        case AFTER_OFF_ON:// return true if event op1 is after op2 and both are present
+            if (op1 >= NUM_EVENTS) return 0;
+            if (op2 >= NUM_EVENTS) return 0;
+            return sequence(op2, FALSE, op1, TRUE);
+        case AFTER_OFF_OFF:// return true if event op1 is after op2 and both are present
+            if (op1 >= NUM_EVENTS) return 0;
+            if (op2 >= NUM_EVENTS) return 0;
+            return sequence(op2, FALSE, op1, FALSE);
         case STATE_ON:
             if (op1 >= NUM_EVENTS) return 0;
             return (currentEventState[op1] != 0);

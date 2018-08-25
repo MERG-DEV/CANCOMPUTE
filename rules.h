@@ -7,11 +7,17 @@
 #define NUM_RULES       50
 
 typedef enum {
-    NOP         =230,   // No action Operation
-    STATE_ON	=231,	// followed by two NV giving the event indexes
-    STATE_OFF	=232,	// followed by two NV giving the event indexes
-    BEFORE		=233,	// followed by two NV giving the event indexes
-	AFTER		=234,	// followed by two NV giving the event indexes
+    NOP         =224,   // No action Operation
+    STATE_ON			=(225),	// followed by one NV giving the event index
+	STATE_OFF			=(226),	// followed by one NV giving the event index
+	BEFORE_OFF_OFF		=(227),	// followed by two NV giving the event indexes
+	BEFORE_OFF_ON		=(228),	// followed by two NV giving the event indexes
+	BEFORE_ON_OFF		=(229),	// followed by two NV giving the event indexes
+	BEFORE_ON_ON		=(230),	// followed by two NV giving the event indexes
+	AFTER_OFF_OFF		=(231),	// followed by two NV giving the event indexes
+	AFTER_OFF_ON		=(232),	// followed by two NV giving the event indexes
+	AFTER_ON_OFF		=(233),	// followed by two NV giving the event indexes
+	AFTER_ON_ON			=(234),	// followed by two NV giving the event indexes
 	THEN		=235,	// Followed by sequence of actions
 	INTEGER		=236,	// followed by one NV of the integer value
 	PLUS		=237,	// followed by two integer expressions
