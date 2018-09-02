@@ -83,6 +83,7 @@
 #include "can18.h"
 #include "cbus.h"
 #include "actionQueue.h"
+#include "computeActions.h"
 
 extern void initOutputs(void);
 extern void processOutputs(void);
@@ -266,6 +267,9 @@ void initialise(void) {
     // RB bits 0,1,4,5 need pullups
     WPUB = 0x33;
     ruleInit();
+    // The init routine doesn't initialise the values
+    NO_ACTION.op = ACTION_OPCODE_NOP;
+    NO_ACTION.arg = 0;
     actionQueueInit();
     computeEventsInit();
     computeFlimInit(); // This will call FLiMinit, which, in turn, calls eventsInit, cbusInit

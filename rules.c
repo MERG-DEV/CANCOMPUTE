@@ -98,7 +98,7 @@ void load(void) {
 		BYTE nv = getNv(nvPtr++);
         BYTE r;
 		
-		if ((OpCodes)nv == END) {
+		if ((OpCodes)nv >= END) {
 			break;
 		}
 		if ((OpCodes)nv != RULE) {

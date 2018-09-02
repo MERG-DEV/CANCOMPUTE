@@ -29,10 +29,12 @@ void processActions(void) {
         }
         if (action.op == ACTION_OPCODE_SEND_ON) {
             sendProducedEvent(action.arg, TRUE);
+            doneAction(q);
             continue;
         }
         if (action.op == ACTION_OPCODE_SEND_OFF) {
             sendProducedEvent(action.arg, FALSE);
+            doneAction(q);
             continue;
         }
     }
