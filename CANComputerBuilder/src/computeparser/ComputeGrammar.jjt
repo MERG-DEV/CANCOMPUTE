@@ -76,7 +76,7 @@ TOKEN : /* KEYWORDS and OPERATORS*/
   | < ISEQ: "is" >
   | < NOT: "not" >
   | < NE: "!=" >
-  | < LT: "< " >
+  | < LT: "<" >
   | < LE: "<=" >
   | < GT: ">" >
   | < GE: ">=" >

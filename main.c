@@ -39,6 +39,7 @@
  */
 /** TODOs
  * * Work out if we need the event hash
+ * * Support when <event> within ... i.e. allow event to be used as a boolean
  * 
  * DONES:
  * * Move rules, expressions, operands, actions to Flash

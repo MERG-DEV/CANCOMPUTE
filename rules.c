@@ -44,6 +44,14 @@ void ruleInit(void) {
     nvPtr = readFlashBlock(AT_NVPTR);
 }
 
+/*
+ *  Handles the THEN clause.
+ * It isn't obvious exactly what this is for so a bit of explanation...
+ * 
+ * The actions after the <time> parameter are run when the expression transitions from false to true.
+ * The actions after the <then> parameter are run when the expressions transitions from true to false.
+ * 
+ */
 void runRules(void) {
     BYTE rule;
     BYTE result;
@@ -105,7 +113,7 @@ void load(void) {
 			ruleState = UNKNOWN_INSTRUCTION;
 			break;
 		}
-		ruleIndex = newRule();
+		r = newRule();
 		if (r < 0) {ruleState = TOO_MANY_RULES; return;}
         ruleIndex = r;
 		writeFlashByte((BYTE*)(&(rules[r].within)), getNv(nvPtr++));

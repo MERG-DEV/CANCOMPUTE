@@ -3,14 +3,35 @@
  */
 
 // define some events first
-define $P13 = NN:0000 EN:0101;
-define $P14 = NN:0000 EN:0102;
-define $P15 = NN:0000 EN:0111;
-define $P16 = NN:0000 EN:0112;
-define $R1 = NN:0000 EN:0001;
+define $p1 = NN:0000 EN:1112;
+define $p2 = NN:0000 EN:2223;
+define $sent = NN:0000 EN:3334;
+
 //3456789012345678901234567890123456789012345678901234567890
 //       1         2         3         4         5
 // Now define some rules
-when count(on$P13)>0 and count(on$P14)>0 and count(on$P16)>0 and count(off$P15)>0 within 5sec send on$R1;
-when state($P13 is on) and state($P14 equals on) and state($P16 = on) and state($P15=off) within 0sec send on$R1;
-when on$P13 before off$P15 within 1sec send on$R1;
+when state($p1 is on) within 1sec send on$sent;
+when state($p1 is off) within 1sec send off$sent;
+when off$p1 before off$p2 within 1sec send off$sent;
+when off$p1 before on$p2 within 1sec send off$sent;
+when on$p1 before off$p2 within 1sec send off$sent;
+when on$p1 before on$p2 within 1sec send off$sent;
+when off$p1 after off$p2 within 1sec send off$sent;
+when off$p1 after on$p2 within 1sec send off$sent;
+when on$p1 after off$p2 within 1sec send off$sent;
+when on$p1 after on$p2 within 1sec send off$sent;
+when count(on$p1) > 1 within 1sec send on$sent then send off$sent;
+when count(off$p1)>0 within 1sec send on$sent then send off$sent;
+when count(on$p1)+count(on$p2) > 1 within 1sec send on$sent then send off$sent;
+when count(on$p1) -1 > 1 within 1sec send on$sent then send off$sent;
+when count(on$p1) > 1+1 within 1sec send on$sent then send off$sent;
+when count(on$p1)=count(on$p2) within 1sec send on$sent then send off$sent;
+when count(on$p1)!=0 within 1sec send on$sent then send off$sent;
+when count(on$p1)<count(on$p2) within 1sec send on$sent then send off$sent;
+when count(on$p1) <= count(on$p2) within 1sec send on$sent then send off$sent;
+when count(on$p1) > count(on$p2) within 1sec send on$sent then send off$sent;
+when count(on$p1)>=count(on$p2) within 1sec send on$sent then send off$sent;
+when count(on$p1)>0 and count(on$p2)>0 within 1sec send on$sent then send off$sent;
+when count(on$p1)>0 or count(on$p2)>0 within 1sec send on$sent then send off$sent;
+when not count(on$p1) is 0 within 1sec send on$sent then send off$sent;
+when state($p1 is on) within 1sec send on$sent, delay 2sec, send off$sent;
