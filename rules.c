@@ -12,8 +12,8 @@ BYTE getNv(BYTE NVindex);
 void loadExpression(BYTE expression);
 void skipActions(void);
 
-rom near Rule * rules = (rom near Rule*)AT_RULES;
-rom near Expression * expressions = (rom near Expression*)AT_EXPRESSIONS;
+rom near Rule * rules;
+rom near Expression * expressions;
 
 BYTE ruleIndex;
 BYTE expressionIndex;
@@ -35,6 +35,8 @@ void doActions(BYTE nvi);
 
 void ruleInit(void) {
     BYTE i;
+    rules = (rom near Rule*)AT_RULES;
+    expressions = (rom near Expression*)AT_EXPRESSIONS;
     for (i=0; i<NUM_RULES; i++) {
         results[i] = FALSE;
     }

@@ -86,11 +86,10 @@ typedef struct {
 
 #include "computeEvents.h"
 
-
 /*
  * FLASH bounds
  */
-#define MIN_WRITEABLE_FLASH     (AT_EVENTS&0xFFC0)
+#define MIN_WRITEABLE_FLASH     ((int)(AT_NVPTR)&0xFFC0)
 #ifdef __18F25K80
 #define MAX_WRITEABLE_FLASH     0x7FFF
 #endif

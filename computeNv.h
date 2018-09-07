@@ -68,7 +68,7 @@ typedef struct {
         BYTE hbDelay;                    // Interval in 100mS for automatic heartbeat. Set to zero for no heartbeat.
 } ModuleNvDefs;
 
-#define NV_NUM  sizeof(ModuleNvDefs)     // Number of node variables
+#define NV_NUM  255     // Number of node variables
 #ifdef __18F25K80
 #define AT_NV   (0x8000 - 0x100)        // Where the NVs are stored. (_ROMSIZE - 256)  Size=256 bytes
 #endif
