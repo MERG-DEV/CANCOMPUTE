@@ -93,7 +93,7 @@ void processEvent(BYTE tableIndex, BYTE * msg) {
         return;
     }
     rxBuffers[bufferIndex].index = ev; // the user's reference index is in ev#1
-    rxBuffers[bufferIndex].on = opc&EVENT_ON_MASK;
+    rxBuffers[bufferIndex].on = !(opc&EVENT_ON_MASK);
     /* disable the timer to prevent roll over of the lower 16 bits while before/after reading of the extension */
     TMR_IE = 0;
     rxBuffers[bufferIndex].time.bytes.b1 = timerExtension1;     // the least significant byte
