@@ -60,11 +60,11 @@ extern "C" {
 
 
 /*
- * This structure is required by FLiM.h
+ * This structure is required by FLiM.h - although its fields are not actually used.
  */
 typedef struct {
         BYTE nv_version;                // version of NV structure
-        BYTE sendSodDelay;               // Time after start in 100mS (plus 2 seconds) to send an automatic SoD. Set to zero for no auto SoD
+        BYTE nv_rules[254];              // The NVs where the rules are stores
         BYTE hbDelay;                    // Interval in 100mS for automatic heartbeat. Set to zero for no heartbeat.
 } ModuleNvDefs;
 

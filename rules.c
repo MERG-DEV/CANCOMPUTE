@@ -58,7 +58,7 @@ void runRules(void) {
     BYTE rule;
     BYTE result;
     BYTE b;
-    for (rule=0; rule<ruleIndex; rule++) {
+    for (rule=0; rule<=ruleIndex; rule++) {
         b = readFlashBlock(&(rules[rule].expression));
         result = execute(b);
         if (results[rule] != result) {
@@ -82,7 +82,7 @@ void doActions(BYTE nvi) {
         op = getNv(nvi++);
         action.arg = getNv(nvi++);
         
-        switch(action.op) {
+        switch(op) {
             case DELAY:
                 action.op = ACTION_OPCODE_DELAY;
             case SEND_ON:
