@@ -85,8 +85,10 @@ void doActions(BYTE nvi) {
         switch(op) {
             case DELAY:
                 action.op = ACTION_OPCODE_DELAY;
+                break;
             case SEND_ON:
                 action.op = ACTION_OPCODE_SEND_ON;
+                break;
             case SEND_OFF:
                 action.op = ACTION_OPCODE_SEND_OFF;
                 break;

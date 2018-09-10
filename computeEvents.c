@@ -101,7 +101,7 @@ void processEvent(BYTE tableIndex, BYTE * msg) {
     /* enable the timer*/
     TMR_IE = 1;
     // store current state
-    currentEventState[ev] = opc&EVENT_ON_MASK;
+    currentEventState[ev] = !(opc&EVENT_ON_MASK);
         
     bufferIndex++;
     if (bufferIndex >= NUM_BUFFERS) bufferIndex = 0;
