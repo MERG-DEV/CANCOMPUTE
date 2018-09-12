@@ -58,7 +58,7 @@ void runRules(void) {
     BYTE rule;
     BYTE result;
     BYTE b;
-    for (rule=0; rule<=ruleIndex; rule++) {
+    for (rule=0; rule<ruleIndex; rule++) {
         b = readFlashBlock(&(rules[rule].expression));
         result = execute(b);
         if (results[rule] != result) {
@@ -92,11 +92,12 @@ void doActions(BYTE nvi) {
             case SEND_OFF:
                 action.op = ACTION_OPCODE_SEND_OFF;
                 break;
-            default: return;
+            default: 
+                nextQueue();
+                return;
         }
         pushAction(action);
     }
-    nextQueue();
 }
 
 void load(void) {
@@ -119,7 +120,6 @@ void load(void) {
 		}
 		r = newRule();
 		if (r < 0) {ruleState = TOO_MANY_RULES; return;}
-        ruleIndex = r;
 		writeFlashByte((BYTE*)(&(rules[r].within)), getNv(nvPtr++));
     	writeFlashByte((BYTE*)(&(rules[r].expression)), newExpression());
         loadExpression(readFlashBlock(&rules[r].expression));
@@ -233,7 +233,7 @@ void skipActions(void) {
         case SEND_ON:
         case SEND_OFF:
         case DELAY:
-            getNv(nvPtr++);
+            nvPtr++;
             break;
         default:
             break;
@@ -332,11 +332,11 @@ BYTE execute(BYTE e) {
 }
 
 BYTE newRule(void) {
-    if (ruleIndex+1 >= NUM_RULES) return TOO_MANY;
+    if (ruleIndex >= NUM_RULES) return TOO_MANY;
 	return ruleIndex++;
 }
 BYTE newExpression(void) {
-	if (expressionIndex+1 >= NUM_EXPRESSIONS) return TOO_MANY;
+	if (expressionIndex >= NUM_EXPRESSIONS) return TOO_MANY;
 	return expressionIndex++;
 }
 

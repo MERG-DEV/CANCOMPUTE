@@ -122,7 +122,7 @@ void doArdat(void) {
     cbusMsg[d0] = OPC_ACDAT;
     // d1 and d2 are the NN
     cbusMsg[d3] = ruleState;
-    cbusMsg[d4] = nvPtr;
+    cbusMsg[d4] = nvPtr-1;
     if (cbusMsg[d3] == VALID) {
         cbusMsg[d5] = ruleIndex;
         cbusMsg[d6] = expressionIndex;

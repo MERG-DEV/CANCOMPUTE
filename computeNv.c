@@ -91,19 +91,7 @@ void actUponNVchange(unsigned char index, unsigned char oldValue, unsigned char 
     if ((OpCodes)value == END) {
         load();
         // send message to indicate the result
-        cbusMsg[d0] = OPC_ACDAT;
-        // d1 and d2 are the NN
-        cbusMsg[d3] = ruleState;
-        cbusMsg[d4] = nvPtr-1;
-        if (cbusMsg[d3] == VALID) {
-            cbusMsg[d5] = ruleIndex+1;
-            cbusMsg[d6] = expressionIndex+1;
-        } else {
-            cbusMsg[d5] = 0;
-            cbusMsg[d6] = 0;
-        }
-        cbusMsg[d7] = 0;
-        cbusSendMsgMyNN( 0, cbusMsg );
+        doArdat();
     }
 }
 

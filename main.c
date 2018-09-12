@@ -39,6 +39,8 @@
  */
 /** TODOs
  * * Work out if we need the event hash
+ * * writing NVs may not be reliable
+ * * Very first event sent out seems to disappear. It is put into ECAN tx buffer but never comes out.
  * * Support when <event> within ... i.e. allow event to be used as a boolean
  * * Handle the within <time> timeout clause
  * 
