@@ -169,7 +169,7 @@ void LOW_INT_VECT(void)
 
 static TickValue   startTime;
 //static BOOL        started = FALSE;
-static TickValue   lastActionPollTime;
+static TickValue   lastRulesPollTime;
 //static TickValue   lastRulePollTime;
 
 #ifdef BOOTLOADER_PRESENT
@@ -203,30 +203,29 @@ int main(void) @0x800 {
     initStatusLeds();
 
     startTime.Val = tickGet();
-    lastActionPollTime.Val = startTime.Val;
+    lastRulesPollTime.Val = startTime.Val;
 //    lastRulePollTime.Val = startTime.Val;
     
     initialise(); 
     sodDelay = getNv(NV_SOD_DELAY);
     while (TRUE) {
         // Startup delay for CBUS about 2 seconds to let other modules get powered up - ISR will be running so incoming packets processed
-        if (!started && (tickTimeSince(startTime) > (sodDelay * HUNDRED_MILI_SECOND) + TWO_SECOND) && (sodDelay>0)) {
-            started = TRUE;
-            sendProducedEvent(ACTION_PRODUCER_SOD, TRUE);
+        if (!started) {
+            if ( (tickTimeSince(startTime) > (sodDelay * HUNDRED_MILI_SECOND) + TWO_SECOND)) {
+                started = TRUE;
+                sendProducedEvent(ACTION_PRODUCER_SOD, TRUE);
+            }
         }
         checkCBUS();    // Consume any CBUS message and act upon it
         FLiMSWCheck();  // Check FLiM switch for any mode changes
         
-//      if (started) {
-            if (tickTimeSince(lastActionPollTime) > 100*ONE_MILI_SECOND) {
-                lastActionPollTime.Val = tickGet();
-                processActions();
-//            }
-//            if (tickTimeSince(lastRulePollTime) > 100*ONE_MILI_SECOND) {
-//                lastRulePollTime.Val = tickGet();
+        if (started) {
+            if (tickTimeSince(lastRulesPollTime) > 100*ONE_MILI_SECOND) {
                 runRules();
+                lastRulesPollTime.Val = tickGet();
+                processActions();
             }
-//        }
+        }
         // Check for any flashing status LEDs
         checkFlashing();
      } // main loop

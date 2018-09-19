@@ -326,7 +326,7 @@ public class NvVisitor implements ComputeGrammarVisitor {
 		if (node.getOpCode() == ASTPrimaryIntegerExpression.OpCodes.COUNT) {
 			ASTMessageState ms = (ASTMessageState) node.jjtGetChild(0);
 			if (ms.getState() == MessageState.ON) {
-				System.out.println("NV#"+hex(nvIndex++)+"="+hex(NvOpCode.COUNT_ON.code())+"\t\t//COUNT_OFF");
+				System.out.println("NV#"+hex(nvIndex++)+"="+hex(NvOpCode.COUNT_ON.code())+"\t\t//COUNT_ON");
 			} else {
 				System.out.println("NV#"+hex(nvIndex++)+"="+hex(NvOpCode.COUNT_OFF.code())+"\t\t//COUNT_OFF");
 			}

@@ -142,7 +142,7 @@ BYTE received(BYTE eventNo, BOOL on) {
         if (bi == 0) {
             bi = NUM_BUFFERS;
         } else {
-            i--;
+            bi--;
         }
     }
     return ret;

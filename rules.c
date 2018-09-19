@@ -60,10 +60,10 @@ void runRules(void) {
     BYTE b;
     for (rule=0; rule<ruleIndex; rule++) {
         b = readFlashBlock(&(rules[rule].expression));
+        timeLimit = readFlashBlock(&(rules[rule].within));
         result = execute(b);
         if (results[rule] != result) {
-            results[rule] = result;
-            timeLimit = readFlashBlock(&(rules[rule].within));
+            results[rule] = result;        
             if (result) {
                 b = readFlashBlock(&(rules[rule].actions));
                 doActions(b);
@@ -227,16 +227,18 @@ void loadExpression(BYTE expression) {
 
 void skipActions(void) {
     BYTE ai = 0;
-        
-	ai = getNv(nvPtr++);
-    switch (ai) {
-        case SEND_ON:
-        case SEND_OFF:
-        case DELAY:
-            nvPtr++;
-            break;
-        default:
-            break;
+    
+    while (1) {
+        ai = getNv(nvPtr++);
+        switch (ai) {
+            case SEND_ON:
+            case SEND_OFF:
+            case DELAY:
+                nvPtr++;
+                break;
+            default:
+                return;
+        }
 	}
 }
 

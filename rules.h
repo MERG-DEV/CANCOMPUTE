@@ -7,37 +7,37 @@
 #define NUM_RULES       50
 
 typedef enum {
-    NOP         =224,   // No action Operation
-    STATE_ON			=(225),	// followed by one NV giving the event index
-	STATE_OFF			=(226),	// followed by one NV giving the event index
-	BEFORE_OFF_OFF		=(227),	// followed by two NV giving the event indexes
-	BEFORE_OFF_ON		=(228),	// followed by two NV giving the event indexes
-	BEFORE_ON_OFF		=(229),	// followed by two NV giving the event indexes
-	BEFORE_ON_ON		=(230),	// followed by two NV giving the event indexes
-	AFTER_OFF_OFF		=(231),	// followed by two NV giving the event indexes
-	AFTER_OFF_ON		=(232),	// followed by two NV giving the event indexes
-	AFTER_ON_OFF		=(233),	// followed by two NV giving the event indexes
-	AFTER_ON_ON			=(234),	// followed by two NV giving the event indexes
-	THEN		=235,	// Followed by sequence of actions
-	INTEGER		=236,	// followed by one NV of the integer value
-	PLUS		=237,	// followed by two integer expressions
-	MINUS		=238,	// followed by two integer expressions
-	EQUALS		=239,	// followed by two integer expressions
-	NOTEQUALS	=240,	// followed by two integer expressions
-	LESS		=241,	// followed by two integer expressions
-	LESSEQUAL	=242,	// followed by two integer expressions
-	MORE		=243,	// followed by two integer expressions
-	MOREEQUAL	=244,	// followed by two integer expressions
-	RULE		=245,	// followed by one NV giving the time period, one boolean expression and a sequence of actions (DELAY, SEND_ON or SEND_OFF)
-	AND			=246,	// followed by two boolean expressions
-	NOT         =247,	// followed by two boolean expressions
-	OR			=248,	// followed by two boolean expressions
-	COUNT_ON	=249,	// followed by one NV giving the event index
-	COUNT_OFF	=250,	// followed by one NV giving the event index
-	DELAY		=251,	// followed by one NV giving the time period in 0.1sec units
-	SEND_ON		=252,	// followed by one NV giving the event index
-	SEND_OFF	=253,	// followed by one NV giving the event index
-	END			=254
+    NOP         =224,   // E0 No action Operation
+    STATE_ON			=(225),	// E1 followed by one NV giving the event index
+	STATE_OFF			=(226),	// E2 followed by one NV giving the event index
+	BEFORE_OFF_OFF		=(227),	// E3 followed by two NV giving the event indexes
+	BEFORE_OFF_ON		=(228),	// E4 followed by two NV giving the event indexes
+	BEFORE_ON_OFF		=(229),	// E5 followed by two NV giving the event indexes
+	BEFORE_ON_ON		=(230),	// E6 followed by two NV giving the event indexes
+	AFTER_OFF_OFF		=(231),	// E7 followed by two NV giving the event indexes
+	AFTER_OFF_ON		=(232),	// E8 followed by two NV giving the event indexes
+	AFTER_ON_OFF		=(233),	// E9 followed by two NV giving the event indexes
+	AFTER_ON_ON			=(234),	// EA followed by two NV giving the event indexes
+	THEN		=235,	// EB Followed by sequence of actions
+	INTEGER		=236,	// EC followed by one NV of the integer value
+	PLUS		=237,	// ED followed by two integer expressions
+	MINUS		=238,	// EE followed by two integer expressions
+	EQUALS		=239,	// EF followed by two integer expressions
+	NOTEQUALS	=240,	// F0 followed by two integer expressions
+	LESS		=241,	// F1 followed by two integer expressions
+	LESSEQUAL	=242,	// F2 followed by two integer expressions
+	MORE		=243,	// F3 followed by two integer expressions
+	MOREEQUAL	=244,	// F4 followed by two integer expressions
+	RULE		=245,	// F5 followed by one NV giving the time period, one boolean expression and a sequence of actions (DELAY, SEND_ON or SEND_OFF)
+	AND			=246,	// F6 followed by two boolean expressions
+	NOT         =247,	// F7 followed by two boolean expressions
+	OR			=248,	// F8 followed by two boolean expressions
+	COUNT_ON	=249,	// F9 followed by one NV giving the event index
+	COUNT_OFF	=250,	// FA followed by one NV giving the event index
+	DELAY		=251,	// FB followed by one NV giving the time period in 0.1sec units
+	SEND_ON		=252,	// FC followed by one NV giving the event index
+	SEND_OFF	=253,	// FD followed by one NV giving the event index
+	END			=254    // FE 
 } OpCodes;
 
 #define MIN_RULE_OPCODE STATE_ON

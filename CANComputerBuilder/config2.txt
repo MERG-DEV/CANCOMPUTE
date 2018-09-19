@@ -10,16 +10,16 @@ define $sent = NN:0000 EN:3334;
 //3456789012345678901234567890123456789012345678901234567890
 //       1         2         3         4         5
 // Now define some rules
-when state($p1 is on) within 1sec send on$sent;
-when state($p1 is off) within 1sec send off$sent;
-when off$p1 before off$p2 within 1sec send off$sent;
-when off$p1 before on$p2 within 1sec send off$sent;
-when on$p1 before off$p2 within 1sec send off$sent;
-when on$p1 before on$p2 within 1sec send off$sent;
-when off$p1 after off$p2 within 1sec send off$sent;
-when off$p1 after on$p2 within 1sec send off$sent;
-when on$p1 after off$p2 within 1sec send off$sent;
-when on$p1 after on$p2 within 1sec send off$sent;
+#when state($p1 is on) within 1sec send on$sent;
+#when state($p1 is off) within 1sec send off$sent;
+#when off$p1 before off$p2 within 1sec send off$sent;
+#when off$p1 before on$p2 within 1sec send off$sent;
+#when on$p1 before off$p2 within 1sec send off$sent;
+#when on$p1 before on$p2 within 1sec send off$sent;
+#when off$p1 after off$p2 within 1sec send off$sent;
+#when off$p1 after on$p2 within 1sec send off$sent;
+#when on$p1 after off$p2 within 1sec send off$sent;
+#when on$p1 after on$p2 within 1sec send off$sent;
 when count(on$p1) > 1 within 1sec send on$sent then send off$sent;
 when count(off$p1)>0 within 1sec send on$sent then send off$sent;
 when count(on$p1)+count(on$p2) > 1 within 1sec send on$sent then send off$sent;
