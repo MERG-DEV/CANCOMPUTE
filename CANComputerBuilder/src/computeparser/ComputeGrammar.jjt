@@ -237,7 +237,7 @@ ASTPrimaryBooleanExpression PrimaryBooleanExpression() #PrimaryBooleanExpression
   {
     return jjtThis;
   }
-  |  <STATE> <LPAREN> Identifier() (<EQ> | <LONGEQ> | <ISEQ>) MessageState() <RPAREN>
+  |  <STATE> <LPAREN> Identifier() <RPAREN> (<EQ> | <LONGEQ> | <ISEQ>) MessageState() 
   {
     jjtThis.setOpCode(ASTPrimaryBooleanExpression.OpCodes.STATE);	// we'll change to off later if necessary
     return jjtThis;

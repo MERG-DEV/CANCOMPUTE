@@ -28,9 +28,9 @@ public class Compute {
 	    try
 	    {
 	      SimpleNode n = ComputeGrammar.Start();
-	      System.out.println("*****Print");
-	      PrintVisitor pv = new PrintVisitor();
-	      pv.visit(n, null);
+	      //System.out.println("*****Print");
+	      //PrintVisitor pv = new PrintVisitor();
+	      //pv.visit(n, null);
 	      
 	      System.out.println("*****Defines");
 	      DefinesVisitor dv = new DefinesVisitor();
@@ -45,7 +45,7 @@ public class Compute {
 	    {
 	      System.out.println("Oops.");
 	      System.out.println(e.getMessage());
-	      e.printStackTrace();
+	      //e.printStackTrace();
 	    }
 	  }
 }
