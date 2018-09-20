@@ -234,9 +234,10 @@ void skipActions(void) {
             case SEND_ON:
             case SEND_OFF:
             case DELAY:
-                nvPtr++;
+                nvPtr++;    // skip the OPCODE's argument
                 break;
             default:
+                nvPtr--;    // move back so that we leave pointer at next instruction
                 return;
         }
 	}
@@ -251,7 +252,7 @@ BYTE execute(BYTE e) {
     BYTE op1, op2;
     opCode = readFlashBlock(&(expressions[e].opCode));
     op1 = readFlashBlock(&(expressions[e].op1));
-    if (op1 >= NUM_EVENTS) return 0;
+    op2 = readFlashBlock(&(expressions[e].op2));
     
     switch(opCode) {
         case BEFORE_ON_ON:// return true if event op1 is before op2 and both are present
@@ -294,10 +295,10 @@ BYTE execute(BYTE e) {
             return (currentEventState[op1] == 0);
         case COUNT_ON:
             if (op1 >= NUM_EVENTS) return 0;
-            return received(op1, TRUE);
+            return count(op1, TRUE);
         case COUNT_OFF:
             if (op1 >= NUM_EVENTS) return 0;
-            return received(op1, FALSE);
+            return count(op1, FALSE);
         case INTEGER:
             return op1;
         case NOT:

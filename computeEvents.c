@@ -115,7 +115,7 @@ BOOL getDefaultProducedEvent(PRODUCER_ACTION_T paction) {
 /*
  * Count the number of times we have received the specified event within the specified timeLimit time
  */
-BYTE received(BYTE eventNo, BOOL on) {
+BYTE count(BYTE eventNo, BOOL on) {
     BYTE bi;
     BYTE ret = 0;
     BYTE i;
@@ -179,7 +179,7 @@ BYTE sequence (BYTE event1, BOOL oo1, BYTE event2, BOOL oo2) {
                 if (bi == 0) {
                     bi = NUM_BUFFERS;
                 } else {
-                    i--;
+                    bi--;
                 }
             }
             return FALSE;
@@ -187,7 +187,7 @@ BYTE sequence (BYTE event1, BOOL oo1, BYTE event2, BOOL oo2) {
         if (bi == 0) {
             bi = NUM_BUFFERS;
         } else {
-            i--;
+            bi--;
         }
     }
     return FALSE;
