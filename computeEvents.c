@@ -213,12 +213,12 @@ BYTE sequence (BYTE event1, BOOL oo1, BYTE event2, BOOL oo2) {
         WORD eventTime = rxBuffers[bi].time.word;
 
         if ((now.word.w1 - eventTime) > timeLimit) break;
-        if ((rxBuffers[bi].index == event1) && (rxBuffers[bi].on == oo1)) {
+        if ((rxBuffers[bi].index == event2) && (rxBuffers[bi].on == oo2)) {
             for ( ; i<NUM_BUFFERS; i++) {
                 eventTime = rxBuffers[bi].time.word;
 
                 if ((now.word.w1 - eventTime) > timeLimit) break;
-                if ((rxBuffers[bi].index == event2) && (rxBuffers[bi].on == oo2)) {
+                if ((rxBuffers[bi].index == event1) && (rxBuffers[bi].on == oo1)) {
                     return TRUE;
                 }
                 if (bi == 0) {

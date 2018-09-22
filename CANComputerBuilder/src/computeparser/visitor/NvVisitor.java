@@ -351,13 +351,19 @@ public class NvVisitor implements ComputeGrammarVisitor {
 		int i2 = i&0xF;
 		return ""+(char)(i1>9?i1-10+'A':i1+'0')+(char)(i2>9?i2-10+'A':i2+'0');
 	}
+	private String dec(int i) {
+		String ret=""+i;
+		if (i < 10) ret += " ";
+		if (i < 100) ret += " ";
+		return ret;
+	}
 	
 	private void doNv(int nvi, NvOpCode op) {
 		doNv(nvi, op.code(), ""+op);
 	}
 	
 	private void doNv(int nvi, int val, String desc) {
-		System.out.println("NV#"+nvi+" (0x"+hex(nvi)+")="+val+" (0x"+hex(val)+")\t\t//"+desc);
+		System.out.println("NV#"+dec(nvi)+" (0x"+hex(nvi)+")="+dec(val)+" (0x"+hex(val)+")\t//"+desc);
 	}
 
 }
