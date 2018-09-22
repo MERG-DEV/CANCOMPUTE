@@ -91,6 +91,7 @@ extern void processEvent(BYTE eventIndex, BYTE* message);
 extern void processActions(void);
 extern BYTE findEventByEV1(BYTE ev);
 extern BYTE count(BYTE eventNo, BOOL on);
+extern BOOL received(BYTE eventNo, BOOL on);
 extern void doArdat(void);
 extern BYTE sequence (BYTE event1, BOOL oo1, BYTE event2, BOOL oo2);
 extern BYTE currentEventState[NUM_EVENTS];

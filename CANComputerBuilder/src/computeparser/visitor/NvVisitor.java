@@ -51,7 +51,7 @@ public class NvVisitor implements ComputeGrammarVisitor {
 	@Override
 	public Object visit(ASTRuleList node, Object data) {
 		node.childrenAccept(this, data);
-		System.out.println("NV#"+hex(nvIndex++) +"="+hex(NvOpCode.END.code())+"\t\t//END");
+		doNv(nvIndex++, NvOpCode.END);
 		return null;
 	}
 
@@ -63,7 +63,7 @@ public class NvVisitor implements ComputeGrammarVisitor {
 	@Override
 	public Object visit(ASTRule node, Object data) {
 		if (node.jjtGetNumChildren() > 0) {
-			System.out.println("NV#"+hex(nvIndex++) +"="+hex(NvOpCode.RULE.code())+"\t\t//RULE");
+			doNv(nvIndex++, NvOpCode.RULE);
 			ASTExpression expression = (ASTExpression) node.jjtGetChild(0);
 			ASTTime within = (ASTTime) node.jjtGetChild(1);
 			ASTActionList actions = (ASTActionList) node.jjtGetChild(2);
@@ -71,7 +71,7 @@ public class NvVisitor implements ComputeGrammarVisitor {
 			expression.jjtAccept(this, data);
 			actions.jjtAccept(this, data);
 			if (node.jjtGetNumChildren() > 3) {	// have a THEN action list
-				System.out.println("NV#"+hex(nvIndex++) +"="+hex(NvOpCode.THEN.code())+"\t\t//THEN");
+				doNv(nvIndex++, NvOpCode.THEN);
 				actions = (ASTActionList) node.jjtGetChild(3);
 				actions.jjtAccept(this, data);
 			}
@@ -91,7 +91,7 @@ public class NvVisitor implements ComputeGrammarVisitor {
 		if (u.getUnits() == 1000) {
 			val /= 100;
 		}
-		System.out.println("NV#"+hex(nvIndex++)+"="+hex(val)+"\t\t//Time value");
+		doNv(nvIndex++, val, "Time Value");
 		return null;
 	}
 
@@ -104,7 +104,7 @@ public class NvVisitor implements ComputeGrammarVisitor {
 	@Override
 	public Object visit(ASTAction node, Object data) {
 		if (node.jjtGetNumChildren() == 1) {	// just Time()
-			System.out.println("NV#"+hex(nvIndex++) +"="+hex(NvOpCode.DELAY.code())+"\t\t//DELAY");
+			doNv(nvIndex++, NvOpCode.DELAY);
 			node.childrenAccept(this, data);
 		}
 		if (node.jjtGetNumChildren() == 2) {	// MessageState and Event
@@ -112,9 +112,9 @@ public class NvVisitor implements ComputeGrammarVisitor {
 			Node n = node.jjtGetChild(0);
 			ASTMessageState ms = (ASTMessageState)n;
 			if (ms.getState() == MessageState.ON) {
-				System.out.println("NV#"+hex(nvIndex++)+"="+hex(NvOpCode.SEND_ON.code())+"\t\t//SEND_ON");
+				doNv(nvIndex++, NvOpCode.SEND_ON);
 			} else {
-				System.out.println("NV#"+hex(nvIndex++)+"="+hex(NvOpCode.SEND_OFF.code())+"\t\t//SEND_OFF");
+				doNv(nvIndex++, NvOpCode.SEND_OFF);
 			}
 			n = node.jjtGetChild(1);
 			n.jjtAccept(this, data);
@@ -136,7 +136,7 @@ public class NvVisitor implements ComputeGrammarVisitor {
 		while (true) {
 			Node n;
 			if (node.jjtGetNumChildren() >  depth+1) {
-				System.out.println("NV#"+hex(nvIndex++)+"="+hex(NvOpCode.OR.code())+"\t\t//OR");
+				doNv(nvIndex++, NvOpCode.OR);
 				n = node.jjtGetChild(depth);
 				n.jjtAccept(this, data);
 				depth++;
@@ -156,7 +156,7 @@ public class NvVisitor implements ComputeGrammarVisitor {
 		while (true) {
 			Node n;
 			if (node.jjtGetNumChildren() >  depth+1) {
-				System.out.println("NV#"+hex(nvIndex++)+"="+hex(NvOpCode.AND.code())+"\t\t//AND");
+				doNv(nvIndex++, NvOpCode.AND);
 				n = node.jjtGetChild(depth);
 				n.jjtAccept(this, data);
 				depth++;
@@ -178,7 +178,7 @@ public class NvVisitor implements ComputeGrammarVisitor {
 		if (ev == 0) {
 			System.out.println("Error: undefined variable \""+node.getName()+"\"");
 		} else {
-			System.out.println("NV#"+hex(nvIndex++)+"="+hex(ev)+"\t\t//Event number");
+			doNv(nvIndex++, ev, "Event Number");
 		}
 		return null;
 	}
@@ -200,21 +200,21 @@ public class NvVisitor implements ComputeGrammarVisitor {
 		if (node.jjtGetNumChildren() >  1) {
 			String op = node.getOpCode();
 			if ("is".equals(op)) {
-				System.out.println("NV#"+hex(nvIndex++)+"="+hex(NvOpCode.EQUALS.code())+"\t\t//EQUALS");
+				doNv(nvIndex++, NvOpCode.EQUALS);
 			} else if ("equals".equals(op)) {
-				System.out.println("NV#"+hex(nvIndex++)+"="+hex(NvOpCode.EQUALS.code())+"\t\t//EQUALS");
+				doNv(nvIndex++, NvOpCode.EQUALS);
 			} else if ("=".equals(op)) {
-				System.out.println("NV#"+hex(nvIndex++)+"="+hex(NvOpCode.EQUALS.code())+"\t\t//EQUALS");
+				doNv(nvIndex++, NvOpCode.EQUALS);
 			} else if ("!=".equals(op)) {
-				System.out.println("NV#"+hex(nvIndex++)+"="+hex(NvOpCode.NOTEQUALS.code())+"\t\t//NOT EQUALS");
+				doNv(nvIndex++, NvOpCode.NOTEQUALS);
 			} else if ("<".equals(op)) {
-				System.out.println("NV#"+hex(nvIndex++)+"="+hex(NvOpCode.LESS.code())+"\t\t//LESS THAN");
+				doNv(nvIndex++, NvOpCode.LESS);
 			} else if ("<=".equals(op)) {
-				System.out.println("NV#"+hex(nvIndex++)+"="+hex(NvOpCode.LESSEQUAL.code())+"\t\t//LESS OR EQUALS");
+				doNv(nvIndex++, NvOpCode.LESSEQUAL);
 			} else if (">".equals(op)) {
-				System.out.println("NV#"+hex(nvIndex++)+"="+hex(NvOpCode.MORE.code())+"\t\t//GREATER THAN");
+				doNv(nvIndex++, NvOpCode.MORE);
 			} else if (">=".equals(op)) {
-				System.out.println("NV#"+hex(nvIndex++)+"="+hex(NvOpCode.MOREEQUAL.code())+"\t\t//GREATER OR EQUALS");
+				doNv(nvIndex++, NvOpCode.MOREEQUAL);
 			} else {
 				System.out.println("Error unknown RelationExpression operator"+op);
 			}
@@ -229,9 +229,9 @@ public class NvVisitor implements ComputeGrammarVisitor {
 		if (node.jjtGetNumChildren() >  1) {
 			String op = node.getOpCode();
 			if ("+".equals(op)) {
-				System.out.println("NV#"+hex(nvIndex++)+"="+hex(NvOpCode.PLUS.code())+"\t\t//PLUS");
+				doNv(nvIndex++, NvOpCode.PLUS);
 			} else if ("-".equals(op)){
-				System.out.println("NV#"+hex(nvIndex++)+"="+hex(NvOpCode.MINUS.code())+"\t\t//MINUS");
+				doNv(nvIndex++, NvOpCode.MINUS);
 			} else {
 				System.out.println("Error unknown AdditiveExpression operator"+op);
 			}
@@ -249,7 +249,7 @@ public class NvVisitor implements ComputeGrammarVisitor {
 	@Override
 	public Object visit(ASTUnaryBooleanExpression node, Object data) {
 		if (node.getOp()) {
-			System.out.println("NV#"+hex(nvIndex++)+"="+hex(NvOpCode.NOT.code())+"\t\t//NOT");
+			doNv(nvIndex++, NvOpCode.NOT);
 		}
 		node.childrenAccept(this, data);
 		return null;
@@ -261,27 +261,35 @@ public class NvVisitor implements ComputeGrammarVisitor {
 		if (node.getOpCode() == OpCodes.STATE) {
 			ASTMessageState ms = (ASTMessageState) node.jjtGetChild(1);
 			if (ms.getState() == MessageState.ON) {
-				System.out.println("NV#"+hex(nvIndex++)+"="+hex(NvOpCode.STATE_ON.code())+"\t\t//STATE_ON");
+				doNv(nvIndex++, NvOpCode.STATE_ON);
 			} else {
-				System.out.println("NV#"+hex(nvIndex++)+"="+hex(NvOpCode.STATE_OFF.code())+"\t\t//STATE_OFF");
+				doNv(nvIndex++, NvOpCode.STATE_OFF);
 			}
 			node.jjtGetChild(0).jjtAccept(this, null);
 			return null;
 		}
+		if (node.getOpCode() == OpCodes.RECEIVED) {
+			ASTMessageState ms = (ASTMessageState) node.jjtGetChild(0);
+			if (ms.getState() == MessageState.ON) {
+				doNv(nvIndex++, NvOpCode.RECEIVED_ON);
+			} else {
+				doNv(nvIndex++, NvOpCode.RECEIVED_OFF);
+			}
+		} 
 		if (node.getOpCode() == OpCodes.BEFORE) {
 			ASTMessage ml = (ASTMessage) node.jjtGetChild(0);
 			ASTMessage mr = (ASTMessage) node.jjtGetChild(1);
 			if(((ASTMessageState)(ml.jjtGetChild(0))).getState()==MessageState.ON) {
 				if(((ASTMessageState)(mr.jjtGetChild(0))).getState()==MessageState.ON) {
-					System.out.println("NV#"+hex(nvIndex++)+"="+hex(NvOpCode.BEFORE_ON_ON.code())+"\t\t//BEFORE_ON_ON");
+					doNv(nvIndex++, NvOpCode.BEFORE_ON_ON);
 				} else {
-					System.out.println("NV#"+hex(nvIndex++)+"="+hex(NvOpCode.BEFORE_ON_OFF.code())+"\t\t//BEFORE_ON_OFF");
+					doNv(nvIndex++, NvOpCode.BEFORE_ON_OFF);
 				}
 			} else {
 				if(((ASTMessageState)(mr.jjtGetChild(0))).getState()==MessageState.ON) {
-					System.out.println("NV#"+hex(nvIndex++)+"="+hex(NvOpCode.BEFORE_OFF_ON.code())+"\t\t//BEFORE_OFF_ON");
+					doNv(nvIndex++, NvOpCode.BEFORE_OFF_ON);
 				} else {
-					System.out.println("NV#"+hex(nvIndex++)+"="+hex(NvOpCode.BEFORE_OFF_OFF.code())+"\t\t//BEFORE_OFF_OFF");
+					doNv(nvIndex++, NvOpCode.BEFORE_OFF_OFF);
 				}
 			}
 			ml.jjtAccept(this, null);
@@ -293,15 +301,15 @@ public class NvVisitor implements ComputeGrammarVisitor {
 			ASTMessage mr = (ASTMessage) node.jjtGetChild(1);
 			if(((ASTMessageState)(ml.jjtGetChild(0))).getState()==MessageState.ON) {
 				if(((ASTMessageState)(mr.jjtGetChild(0))).getState()==MessageState.ON) {
-					System.out.println("NV#"+hex(nvIndex++)+"="+hex(NvOpCode.AFTER_ON_ON.code())+"\t\t//AFTER_ON_ON");
+					doNv(nvIndex++, NvOpCode.AFTER_ON_ON);
 				} else {
-					System.out.println("NV#"+hex(nvIndex++)+"="+hex(NvOpCode.AFTER_ON_OFF.code())+"\t\t//AFTER_ON_OFF");
+					doNv(nvIndex++, NvOpCode.AFTER_ON_OFF);
 				}
 			} else {
 				if(((ASTMessageState)(mr.jjtGetChild(0))).getState()==MessageState.ON) {
-					System.out.println("NV#"+hex(nvIndex++)+"="+hex(NvOpCode.AFTER_OFF_ON.code())+"\t\t//AFTER_OFF_ON");
+					doNv(nvIndex++, NvOpCode.AFTER_OFF_ON);
 				} else {
-					System.out.println("NV#"+hex(nvIndex++)+"="+hex(NvOpCode.AFTER_OFF_OFF.code())+"\t\t//AFTER_OFF_OFF");
+					doNv(nvIndex++, NvOpCode.AFTER_OFF_OFF);
 				}
 			}	
 			ml.jjtAccept(this, null);
@@ -326,13 +334,13 @@ public class NvVisitor implements ComputeGrammarVisitor {
 		if (node.getOpCode() == ASTPrimaryIntegerExpression.OpCodes.COUNT) {
 			ASTMessageState ms = (ASTMessageState) node.jjtGetChild(0);
 			if (ms.getState() == MessageState.ON) {
-				System.out.println("NV#"+hex(nvIndex++)+"="+hex(NvOpCode.COUNT_ON.code())+"\t\t//COUNT_ON");
+				doNv(nvIndex++, NvOpCode.COUNT_ON);
 			} else {
-				System.out.println("NV#"+hex(nvIndex++)+"="+hex(NvOpCode.COUNT_OFF.code())+"\t\t//COUNT_OFF");
+				doNv(nvIndex++, NvOpCode.COUNT_OFF);
 			}
 		} else if (node.getOpCode() == ASTPrimaryIntegerExpression.OpCodes.INTEGER) {
-			System.out.println("NV#"+hex(nvIndex++)+"="+hex(NvOpCode.INTEGER.code())+"\t\t//INTEGER");
-			System.out.println("NV#"+hex(nvIndex++)+"="+hex(node.getInt())+"\t\t//INT VALUE");
+			doNv(nvIndex++, NvOpCode.INTEGER);
+			doNv(nvIndex++, node.getInt(), "Integer value");
 		}
 		node.childrenAccept(this, data);
 		return null;
@@ -342,6 +350,14 @@ public class NvVisitor implements ComputeGrammarVisitor {
 		int i1 = (i>>4)&0xF;
 		int i2 = i&0xF;
 		return ""+(char)(i1>9?i1-10+'A':i1+'0')+(char)(i2>9?i2-10+'A':i2+'0');
+	}
+	
+	private void doNv(int nvi, NvOpCode op) {
+		doNv(nvi, op.code(), ""+op);
+	}
+	
+	private void doNv(int nvi, int val, String desc) {
+		System.out.println("NV#"+nvi+" (0x"+hex(nvi)+")="+val+" (0x"+hex(val)+")\t\t//"+desc);
 	}
 
 }

@@ -7,7 +7,9 @@
 #define NUM_RULES       50
 
 typedef enum {
-    NOP         =224,   // E0 No action Operation
+    NOP         =222,   // E0 No action Operation
+    RECEIVED_ON			=(223),	// E1 followed by one NV giving the event index
+	RECEIVED_OFF		=(224),	// E2 followed by one NV giving the event index
     STATE_ON			=(225),	// E1 followed by one NV giving the event index
 	STATE_OFF			=(226),	// E2 followed by one NV giving the event index
 	BEFORE_OFF_OFF		=(227),	// E3 followed by two NV giving the event indexes

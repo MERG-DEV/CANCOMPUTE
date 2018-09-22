@@ -112,8 +112,48 @@ BOOL getDefaultProducedEvent(PRODUCER_ACTION_T paction) {
     return FALSE;
 }
 
-/*
- * Count the number of times we have received the specified event within the specified timeLimit time
+/**
+ * Return true if the event has been received within the time window.
+ * @param eventNo the event number (not the EN)
+ * @param on boolean indicating if we are testing ON or OFF events
+ * @return true if the event has been received within the time window
+ */
+BOOL received(BYTE eventNo, BOOL on) {
+    BYTE bi;
+    BYTE i;
+    
+    if (bufferIndex == 0) {
+        bi = NUM_BUFFERS;
+    } else {
+        bi = bufferIndex - 1;
+    }
+    
+    now.Val = tickGet();
+    
+    // go backwards through the buffer list until we exceed the time limit
+    for (i=0; i<NUM_BUFFERS; i++) {
+        WORD eventTime = rxBuffers[bi].time.word;
+
+        if ((now.word.w1 - eventTime) > timeLimit) break;
+        if (rxBuffers[bi].index == eventNo) {
+            if (rxBuffers[bi].on == on) {
+                return TRUE;
+            }
+        }
+        if (bi == 0) {
+            bi = NUM_BUFFERS;
+        } else {
+            bi--;
+        }
+    }
+    return FALSE;
+}
+
+/**
+ * Count the number of times we have received the specified event within the specified timeLimit time.
+ * @param eventNo the event number (not the EN)
+ * @param on boolean indicating if we are testing ON or OFF events
+ * @return the count of the number of times the event has been received within the time window
  */
 BYTE count(BYTE eventNo, BOOL on) {
     BYTE bi;
@@ -150,6 +190,11 @@ BYTE count(BYTE eventNo, BOOL on) {
 
 /**
  *  return TRUE if event1 and event2 are within time and event1 occurs before event2
+ * @param event1 the event number (not the EN)
+ * @param oo1 boolean indicating if we are testing ON or OFF events
+ * @param event2 the event number (not the EN)
+ * @param oo2 boolean indicating if we are testing ON or OFF events
+ * @return true if the event has been received within the time window
  */
 BYTE sequence (BYTE event1, BOOL oo1, BYTE event2, BOOL oo2) {
     BYTE bi;

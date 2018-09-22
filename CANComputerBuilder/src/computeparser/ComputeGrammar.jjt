@@ -61,6 +61,7 @@ TOKEN : /* KEYWORDS and OPERATORS*/
   | < EN: "EN:" >
   | < COUNT: "count" >
   | < STATE: "state" >
+  | < RECEIVED: "received" >
   | < SEMICOLON: ";" >
   | < COMMA: "," >
   | < DEFINE: "define" >
@@ -240,6 +241,11 @@ ASTPrimaryBooleanExpression PrimaryBooleanExpression() #PrimaryBooleanExpression
   |  <STATE> <LPAREN> Identifier() <RPAREN> (<EQ> | <LONGEQ> | <ISEQ>) MessageState() 
   {
     jjtThis.setOpCode(ASTPrimaryBooleanExpression.OpCodes.STATE);	// we'll change to off later if necessary
+    return jjtThis;
+  }
+  |  <RECEIVED> <LPAREN> MessageState() Identifier() <RPAREN> 
+  {
+    jjtThis.setOpCode(ASTPrimaryBooleanExpression.OpCodes.RECEIVED);	// we'll change to off later if necessary
     return jjtThis;
   }
   

@@ -8,7 +8,8 @@ class ASTPrimaryBooleanExpression extends SimpleNode {
 		EXPRESSION,
 		BEFORE,
 		AFTER, 
-		STATE
+		STATE,
+		RECEIVED
 	};
 	OpCodes opCode;
   public ASTPrimaryBooleanExpression(int id) {

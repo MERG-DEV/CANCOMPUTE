@@ -174,6 +174,8 @@ void loadExpression(BYTE expression) {
                 writeFlashByte((BYTE*)(&(expressions[expression].op2.eventNo)), val);
                 if (val > (NUM_EVENTS -1)) {ruleState = INVALID_EVENT; return;}
                 break;
+            case RECEIVED_ON:
+            case RECEIVED_OFF:
             case COUNT_ON:
             case COUNT_OFF:
             case STATE_ON:
@@ -299,6 +301,12 @@ BYTE execute(BYTE e) {
         case COUNT_OFF:
             if (op1 >= NUM_EVENTS) return 0;
             return count(op1, FALSE);
+        case RECEIVED_ON:
+            if (op1 >= NUM_EVENTS) return 0;
+            return received(op1, TRUE);
+        case RECEIVED_OFF:
+            if (op1 >= NUM_EVENTS) return 0;
+            return received(op1, FALSE);
         case INTEGER:
             return op1;
         case NOT:
