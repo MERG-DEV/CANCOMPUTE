@@ -278,6 +278,7 @@ void initialise(void) {
     NO_ACTION.op = ACTION_OPCODE_NOP;
     NO_ACTION.arg = 0;
     actionQueueInit();
+    initActions();
     computeEventsInit();
     computeFlimInit(); // This will call FLiMinit, which, in turn, calls eventsInit, cbusInit
 

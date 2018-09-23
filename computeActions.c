@@ -8,6 +8,10 @@ void doWait(BYTE q, unsigned int duration);
 
 static TickValue startWait;
 
+void initActions(void) {
+    startWait.Val = 0;
+}
+
 /**
  * This needs to be called on a regular basis to see if any
  * actions have finished and the next needs to be started.

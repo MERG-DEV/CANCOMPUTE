@@ -6,4 +6,6 @@
 #define ACTION_OPCODE_SEND_OFF  2
 #define ACTION_OPCODE_DELAY     3
 
+extern void initActions(void);
+
 #endif
