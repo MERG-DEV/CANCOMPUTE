@@ -99,13 +99,7 @@ extern BYTE currentEventState[NUM_EVENTS];
 typedef struct {
     BOOL on;
     BYTE index;
-    union {
-        WORD word;
-        struct {
-            BYTE b1;
-            BYTE b2;
-        } bytes;
-    } time;
+    WORD  time;
 } RxBuffer;
 #define NUM_BUFFERS 128
 

@@ -57,8 +57,6 @@
 RxBuffer rxBuffers[NUM_BUFFERS];
 #pragma udata
 static BYTE bufferIndex;    // where to write the next event
-static TickValue now;
-
 extern BYTE timeLimit;
 
 // forward declarations
@@ -96,8 +94,7 @@ void processEvent(BYTE tableIndex, BYTE * msg) {
     rxBuffers[bufferIndex].on = !(opc&EVENT_ON_MASK);
     /* disable the timer to prevent roll over of the lower 16 bits while before/after reading of the extension */
     TMR_IE = 0;
-    rxBuffers[bufferIndex].time.bytes.b1 = timerExtension1;     // the least significant byte
-    rxBuffers[bufferIndex].time.bytes.b2 = timerExtension2;     // this is the most significant byte
+    rxBuffers[bufferIndex].time=globalTimeStamp;  
     /* enable the timer*/
     TMR_IE = 1;
     // store current state
@@ -128,13 +125,9 @@ BOOL received(BYTE eventNo, BOOL on) {
         bi = bufferIndex - 1;
     }
     
-    now.Val = tickGet();
-    
     // go backwards through the buffer list until we exceed the time limit
     for (i=0; i<NUM_BUFFERS; i++) {
-        WORD eventTime = rxBuffers[bi].time.word;
-
-        if ((now.word.w1 - eventTime) > timeLimit) break;
+        if ((globalTimeStamp - rxBuffers[bi].time) > timeLimit) break;
         if (rxBuffers[bi].index == eventNo) {
             if (rxBuffers[bi].on == on) {
                 return TRUE;
@@ -166,13 +159,9 @@ BYTE count(BYTE eventNo, BOOL on) {
         bi = bufferIndex - 1;
     }
     
-    now.Val = tickGet();
-    
-    // go backwards through the buffer list until we exceed the time limit
+     // go backwards through the buffer list until we exceed the time limit
     for (i=0; i<NUM_BUFFERS; i++) {
-        WORD eventTime = rxBuffers[bi].time.word;
-
-        if ((now.word.w1 - eventTime) > timeLimit) break;
+        if ((globalTimeStamp - rxBuffers[bi].time) > timeLimit) break;
         if (rxBuffers[bi].index == eventNo) {
             if (rxBuffers[bi].on == on) {
                 ret++;
@@ -206,18 +195,12 @@ BYTE sequence (BYTE event1, BOOL oo1, BYTE event2, BOOL oo2) {
     } else {
         bi = bufferIndex - 1;
     }
-    
-    now.Val = tickGet();
-
+ 
     for (i=0; i<NUM_BUFFERS; i++) {
-        WORD eventTime = rxBuffers[bi].time.word;
-
-        if ((now.word.w1 - eventTime) > timeLimit) break;
+        if ((globalTimeStamp - rxBuffers[bi].time) > timeLimit) break;
         if ((rxBuffers[bi].index == event2) && (rxBuffers[bi].on == oo2)) {
             for ( ; i<NUM_BUFFERS; i++) {
-                eventTime = rxBuffers[bi].time.word;
-
-                if ((now.word.w1 - eventTime) > timeLimit) break;
+                if ((globalTimeStamp - rxBuffers[bi].time) > timeLimit) break;
                 if ((rxBuffers[bi].index == event1) && (rxBuffers[bi].on == oo1)) {
                     return TRUE;
                 }

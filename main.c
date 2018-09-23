@@ -171,6 +171,8 @@ static TickValue   startTime;
 //static BOOL        started = FALSE;
 static TickValue   lastRulesPollTime;
 //static TickValue   lastRulePollTime;
+/* This is used to stamp event times and to do the "within" comparisons */
+WORD globalTimeStamp;
 
 #ifdef BOOTLOADER_PRESENT
 // ensure that the bootflag is zeroed
@@ -205,6 +207,7 @@ int main(void) @0x800 {
     startTime.Val = tickGet();
     lastRulesPollTime.Val = startTime.Val;
 //    lastRulePollTime.Val = startTime.Val;
+    globalTimeStamp = 0;
     
     initialise(); 
     sodDelay = getNv(NV_SOD_DELAY);
@@ -219,8 +222,9 @@ int main(void) @0x800 {
         checkCBUS();    // Consume any CBUS message and act upon it
         FLiMSWCheck();  // Check FLiM switch for any mode changes
         
-        if (started) {
-            if (tickTimeSince(lastRulesPollTime) > 100*ONE_MILI_SECOND) {
+        if (tickTimeSince(lastRulesPollTime) > 100*ONE_MILI_SECOND) {
+            globalTimeStamp++;
+            if (started) {
                 runRules();
                 lastRulesPollTime.Val = tickGet();
                 processActions();

@@ -107,6 +107,8 @@ typedef struct {
                                 // move the next power of two since cyclic wrapping is done with a bitmask.
                                 // 16 is safer as we have wait actions
 #define NUM_ACTION_QUEUES   6
+
+extern WORD globalTimeStamp;
     
 #ifdef	__cplusplus
 }
