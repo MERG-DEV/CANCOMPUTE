@@ -134,6 +134,14 @@ ASTTime Time() #Time:
   t=<INTEGER_LITERAL> Units()
   {
     jjtThis.setTime(t.image);
+    ASTUnits u = (ASTUnits)(jjtThis.jjtGetChild(0));
+    if (jjtThis.getTime()*u.getUnits() > 25500) {
+	  int error_line = jj_input_stream.getEndLine();
+      int error_column = jj_input_stream.getEndColumn();
+      System.out.println("Error Time value "+jjtThis.getTime()+" at line "+error_line+" column "+error_column+
+      						" is too big and will be set to maximum");
+      jjtThis.setTime(""+(25500/u.getUnits()));
+    } 
   	return jjtThis;
   }}
 
@@ -145,9 +153,9 @@ ASTUnits Units() #Units:
   (t=<SEC>| t=<SHORTSEC> | t=<MILLISEC>)
   {
     if (t.image.charAt(0) == 's') {
-      jjtThis.setUnits(1);
-    } else {
       jjtThis.setUnits(1000);
+    } else {
+      jjtThis.setUnits(1);
     }
     return jjtThis;
   }
@@ -296,6 +304,13 @@ ASTPrimaryIntegerExpression PrimaryIntegerExpression() #PrimaryIntegerExpression
   |  t=<INTEGER_LITERAL> 
   {
     jjtThis.setInt(t.image);
+    if (jjtThis.getInt() > 255) {
+      int error_line = jj_input_stream.getEndLine();
+      int error_column = jj_input_stream.getEndColumn();
+      System.out.println("Error integer value "+jjtThis.getInt()+" at line "+error_line+" column "+error_column+
+      							" is too big and will be set to maximum");
+	  jjtThis.setInt("255");
+    } 
     jjtThis.setOpCode(ASTPrimaryIntegerExpression.OpCodes.INTEGER);
     return jjtThis;
   }

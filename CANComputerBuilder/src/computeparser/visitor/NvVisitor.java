@@ -84,13 +84,7 @@ public class NvVisitor implements ComputeGrammarVisitor {
 		// Convert to 1/10 of seconds
 		Node n = node.jjtGetChild(0);
 		ASTUnits u = (ASTUnits)n;
-		int val = node.getTime();
-		if (u.getUnits() == 1) {
-			val *= 10;
-		}
-		if (u.getUnits() == 1000) {
-			val /= 100;
-		}
+		int val = (node.getTime()*u.getUnits())/100;
 		doNv(nvIndex++, val, "Time Value");
 		return null;
 	}
