@@ -52,6 +52,7 @@
 #include "computeEvents.h"
 #include "cbus.h"
 #include "FliM.h"
+#include "ComputeActions.h"
 
 #pragma udata large_rx_buffer
 RxBuffer rxBuffers[NUM_BUFFERS];
@@ -90,8 +91,11 @@ void processEvent(BYTE tableIndex, BYTE * msg) {
         // this shouldn't happen
         return;
     }
-    rxBuffers[bufferIndex].index = ev; // the user's reference index is in ev#1
-    rxBuffers[bufferIndex].on = !(opc&EVENT_ON_MASK);
+    if (opc&EVENT_ON_MASK) {
+        rxBuffers[bufferIndex].eventNoAndOnOff = ev | EVENT_ON; // the user's reference index is in ev#1
+    } else {
+        rxBuffers[bufferIndex].eventNoAndOnOff = EVENT_NO(ev); // the user's reference index is in ev#1
+    }
     /* disable the timer to prevent roll over of the lower 16 bits while before/after reading of the extension */
     TMR_IE = 0;
     rxBuffers[bufferIndex].time=globalTimeStamp;  
@@ -111,11 +115,10 @@ BOOL getDefaultProducedEvent(PRODUCER_ACTION_T paction) {
 
 /**
  * Return true if the event has been received within the time window.
- * @param eventNo the event number (not the EN)
- * @param on boolean indicating if we are testing ON or OFF events
+ * @param eventNo the event number (not the EN) including on/off
  * @return true if the event has been received within the time window
  */
-BOOL received(BYTE eventNo, BOOL on) {
+BOOL receivedEvent(BYTE eventNo) {
     BYTE bi;
     BYTE i;
     
@@ -128,10 +131,8 @@ BOOL received(BYTE eventNo, BOOL on) {
     // go backwards through the buffer list until we exceed the time limit
     for (i=0; i<NUM_BUFFERS; i++) {
         if ((globalTimeStamp - rxBuffers[bi].time) > timeLimit) break;
-        if (rxBuffers[bi].index == eventNo) {
-            if (rxBuffers[bi].on == on) {
-                return TRUE;
-            }
+        if (rxBuffers[bi].eventNoAndOnOff == eventNo) {
+            return TRUE;
         }
         if (bi == 0) {
             bi = NUM_BUFFERS;
@@ -144,11 +145,10 @@ BOOL received(BYTE eventNo, BOOL on) {
 
 /**
  * Count the number of times we have received the specified event within the specified timeLimit time.
- * @param eventNo the event number (not the EN)
- * @param on boolean indicating if we are testing ON or OFF events
+ * @param eventNo the event number (not the EN) including on/off
  * @return the count of the number of times the event has been received within the time window
  */
-BYTE count(BYTE eventNo, BOOL on) {
+BYTE countEvent(BYTE eventNo) {
     BYTE bi;
     BYTE ret = 0;
     BYTE i;
@@ -162,11 +162,9 @@ BYTE count(BYTE eventNo, BOOL on) {
      // go backwards through the buffer list until we exceed the time limit
     for (i=0; i<NUM_BUFFERS; i++) {
         if ((globalTimeStamp - rxBuffers[bi].time) > timeLimit) break;
-        if (rxBuffers[bi].index == eventNo) {
-            if (rxBuffers[bi].on == on) {
-                ret++;
-                if (ret == 255) return ret;
-            }
+        if (rxBuffers[bi].eventNoAndOnOff == eventNo) {
+            ret++;
+            if (ret == 255) return ret;
         }
         if (bi == 0) {
             bi = NUM_BUFFERS;
@@ -179,13 +177,11 @@ BYTE count(BYTE eventNo, BOOL on) {
 
 /**
  *  return TRUE if event1 and event2 are within time and event1 occurs before event2
- * @param event1 the event number (not the EN)
- * @param oo1 boolean indicating if we are testing ON or OFF events
- * @param event2 the event number (not the EN)
- * @param oo2 boolean indicating if we are testing ON or OFF events
+ * @param event1 the event number (not the EN) including on/off
+ * @param event2 the event number (not the EN) including on/off
  * @return true if the event has been received within the time window
  */
-BYTE sequence (BYTE event1, BOOL oo1, BYTE event2, BOOL oo2) {
+BYTE sequence2 (BYTE event1, BYTE event2) {
     BYTE bi;
     BYTE ret = 0;
     BYTE i;
@@ -198,10 +194,10 @@ BYTE sequence (BYTE event1, BOOL oo1, BYTE event2, BOOL oo2) {
  
     for (i=0; i<NUM_BUFFERS; i++) {
         if ((globalTimeStamp - rxBuffers[bi].time) > timeLimit) break;
-        if ((rxBuffers[bi].index == event2) && (rxBuffers[bi].on == oo2)) {
+        if (rxBuffers[bi].eventNoAndOnOff == event2) {
             for ( ; i<NUM_BUFFERS; i++) {
                 if ((globalTimeStamp - rxBuffers[bi].time) > timeLimit) break;
-                if ((rxBuffers[bi].index == event1) && (rxBuffers[bi].on == oo1)) {
+                if (rxBuffers[bi].eventNoAndOnOff == event1) {
                     return TRUE;
                 }
                 if (bi == 0) {
@@ -211,6 +207,42 @@ BYTE sequence (BYTE event1, BOOL oo1, BYTE event2, BOOL oo2) {
                 }
             }
             return FALSE;
+        }
+        if (bi == 0) {
+            bi = NUM_BUFFERS;
+        } else {
+            bi--;
+        }
+    }
+    return FALSE;
+}
+
+
+/**
+ *  return TRUE if all the event and event are within time and in the right order
+ * @param event1 the number of events
+ * @param event2 the NV index to the start of the event list
+ * @return true if all the events have been received within the time window
+ */
+BYTE sequenceMulti(BYTE num, BYTE nvIndex) {
+    BYTE bi;
+    BYTE ret = 0;
+    BYTE i;
+    BYTE nvi = nvIndex;
+    
+    if (bufferIndex == 0) {
+        bi = NUM_BUFFERS;
+    } else {
+        bi = bufferIndex - 1;
+    }
+    if (num == 0) return TRUE;
+ 
+    for (i=0; i<NUM_BUFFERS; i++) {
+        if ((globalTimeStamp - rxBuffers[bi].time) > timeLimit) break;  // didn't find all in time
+        
+        if (rxBuffers[bi].eventNoAndOnOff == getNv(nvi)) {  // found next event
+            nvi++;
+            if (nvIndex >= nvIndex+num) return TRUE;    // reached end
         }
         if (bi == 0) {
             bi = NUM_BUFFERS;

@@ -1,8 +1,5 @@
 package computeparser.visitor;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import computeparser.ASTAction;
 import computeparser.ASTActionList;
 import computeparser.ASTAdditiveExpression;
@@ -20,6 +17,7 @@ import computeparser.ASTPrimaryIntegerExpression;
 import computeparser.ASTRelationalExpression;
 import computeparser.ASTRule;
 import computeparser.ASTRuleList;
+import computeparser.ASTSetNN;
 import computeparser.ASTSimpleNode;
 import computeparser.ASTTime;
 import computeparser.ASTUnaryBooleanExpression;
@@ -28,16 +26,7 @@ import computeparser.ComputeGrammarVisitor;
 import computeparser.SimpleNode;
 
 public class DefinesVisitor implements ComputeGrammarVisitor {
-	static private Map<String, Integer> defines = new HashMap<String, Integer>();
-	static private int eventIndex = 1;
 	
-	static public int getIndex(String name) {
-		if (defines.get(name) == null) {
-			return 0;
-		};
-		return defines.get(name);
-	}
-
 	@Override
 	public Object visit(SimpleNode node, Object data) {
 		node.childrenAccept(this, data);
@@ -68,8 +57,8 @@ public class DefinesVisitor implements ComputeGrammarVisitor {
 		ASTIdentifier id = (ASTIdentifier)node.jjtGetChild(0);
 		ASTEventLiteral ev = (ASTEventLiteral)node.jjtGetChild(1);
 		System.out.println("Got a define for identifier("+id.getName()+")="+ev.getEvent());
-		System.out.println("Add Event "+ev.getEvent()+" EV#1="+eventIndex);
-		defines.put(id.getName(), eventIndex++);
+		System.out.println("Add Event "+ev.getEvent()+" EV#1="+Variables.getIndex());
+		Variables.setIndex(id.getName());
 		node.childrenAccept(this, data);
 		return null;
 	}
@@ -158,4 +147,11 @@ public class DefinesVisitor implements ComputeGrammarVisitor {
 	public Object visit(ASTPrimaryIntegerExpression node, Object data) {
 		return null;
 	}
+
+	@Override
+	public Object visit(ASTSetNN node, Object data) {
+		return null;
+	}
+	
+
 }

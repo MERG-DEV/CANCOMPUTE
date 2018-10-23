@@ -7,19 +7,16 @@
 #define NUM_RULES       50
 
 typedef enum {
-    NOP         =222,   // DE No action Operation
-    RECEIVED_ON			=(223),	// DF followed by one NV giving the event index
-	RECEIVED_OFF		=(224),	// E0 followed by one NV giving the event index
-    STATE_ON			=(225),	// E1 followed by one NV giving the event index
-	STATE_OFF			=(226),	// E2 followed by one NV giving the event index
-	BEFORE_OFF_OFF		=(227),	// E3 followed by two NV giving the event indexes
-	BEFORE_OFF_ON		=(228),	// E4 followed by two NV giving the event indexes
-	BEFORE_ON_OFF		=(229),	// E5 followed by two NV giving the event indexes
-	BEFORE_ON_ON		=(230),	// E6 followed by two NV giving the event indexes
-	AFTER_OFF_OFF		=(231),	// E7 followed by two NV giving the event indexes
-	AFTER_OFF_ON		=(232),	// E8 followed by two NV giving the event indexes
-	AFTER_ON_OFF		=(233),	// E9 followed by two NV giving the event indexes
-	AFTER_ON_ON			=(234),	// EA followed by two NV giving the event indexes
+    NOP         =200,   // C8 No action Operation
+    SEQUENCE    =(222), // DE followed by one NV giving number of other (event) NVs)
+    
+	RECEIVED	=(224),	// E0 followed by one NV giving the event index
+    STATE_ON	=(225),	// E1 followed by one NV giving the event index
+	STATE_OFF	=(226),	// E2 followed by one NV giving the event index
+	
+	BEFORE		=(230),	// E6 followed by two NV giving the event indexes
+	
+	AFTER		=(234),	// EA followed by two NV giving the event indexes
 	THEN		=235,	// EB Followed by sequence of actions
 	INTEGER		=236,	// EC followed by one NV of the integer value
 	PLUS		=237,	// ED followed by two integer expressions
@@ -34,11 +31,11 @@ typedef enum {
 	AND			=246,	// F6 followed by two boolean expressions
 	NOT         =247,	// F7 followed by two boolean expressions
 	OR			=248,	// F8 followed by two boolean expressions
-	COUNT_ON	=249,	// F9 followed by one NV giving the event index
-	COUNT_OFF	=250,	// FA followed by one NV giving the event index
+	
+	COUNT       =250,	// FA followed by one NV giving the event index
 	DELAY		=251,	// FB followed by one NV giving the time period in 0.1sec units
-	SEND_ON		=252,	// FC followed by one NV giving the event index
-	SEND_OFF	=253,	// FD followed by one NV giving the event index
+	
+	SEND    	=253,	// FD followed by one NV giving the event index
 	END			=254    // FE 
 } OpCodes;
 

@@ -90,15 +90,15 @@ extern void computeEventsInit(void);
 extern void processEvent(BYTE eventIndex, BYTE* message);
 extern void processActions(void);
 extern BYTE findEventByEV1(BYTE ev);
-extern BYTE count(BYTE eventNo, BOOL on);
-extern BOOL received(BYTE eventNo, BOOL on);
+extern BYTE countEvent(BYTE eventNo);
+extern BOOL receivedEvent(BYTE eventNo);
 extern void doArdat(void);
-extern BYTE sequence (BYTE event1, BOOL oo1, BYTE event2, BOOL oo2);
+extern BYTE sequence2(BYTE event1, BYTE event2);
+extern BYTE sequenceMulti(BYTE num, BYTE nvIndex);
 extern BYTE currentEventState[NUM_EVENTS];
 
 typedef struct {
-    BOOL on;
-    BYTE index;
+    BYTE eventNoAndOnOff;
     WORD  time;
 } RxBuffer;
 #define NUM_BUFFERS 128

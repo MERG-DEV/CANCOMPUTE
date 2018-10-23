@@ -4,12 +4,26 @@ package computeparser;
 
 public
 class ASTAction extends SimpleNode {
+  public enum OpCodes {
+		SEND,
+		DELAY
+  };
+  
+  private OpCodes opCode;
+  
   public ASTAction(int id) {
     super(id);
   }
 
   public ASTAction(ComputeGrammar p, int id) {
     super(p, id);
+  }
+  
+  public void setAction(OpCodes op) {
+	  opCode = op;
+  }
+  public OpCodes getAction() {
+	  return opCode;
   }
 
 

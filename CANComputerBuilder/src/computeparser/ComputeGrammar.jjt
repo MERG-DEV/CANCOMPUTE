@@ -54,6 +54,7 @@ TOKEN : /* KEYWORDS and OPERATORS*/
   < AND: "and" >
   | < BEFORE: "before" >
   | < AFTER: "after" >
+  | < SEQUENCE: "sequence" >
   | < OR: "or" >
   | < ON: "on" >
   | < OFF: "off" >
@@ -87,7 +88,19 @@ TOKEN : /* KEYWORDS and OPERATORS*/
   | < SEC: "sec" >
   | < SHORTSEC: "s" >
 }ASTSimpleNode Start() #SimpleNode:{
-}{  DefineList() RuleList()  {    return jjtThis;  }}
+}{  [ SetNN() ] DefineList() RuleList()  {    return jjtThis;  }}
+
+ASTSetNN SetNN() #SetNN:
+{
+  Token n = null;
+}
+{
+  <NN> n=<INTEGER_LITERAL> <SEMICOLON>
+  {
+    jjtThis.setNN(n.image);
+    return jjtThis;
+  }
+}
 
 ASTDefineList DefineList() #DefineList:
 {
@@ -173,15 +186,18 @@ ASTActionList ActionList() #ActionList:
 ASTAction Action() #Action:
 {
 }
-{    <SEND> MessageState() Identifier()
+{    <SEND> Message()
       {
+        jjtThis.setAction(ASTAction.OpCodes.SEND);
     	return jjtThis;
   	  }
-  | <DELAY> Time()
+  | <DELAY> Message()
     {
+        jjtThis.setAction(ASTAction.OpCodes.DELAY);
     	return jjtThis;
   	}
 }
+
 
 // Below are expressions returning booleansASTExpression BooleanExpression() #Expression:{
 }{  OrExpression()
@@ -233,7 +249,7 @@ ASTPrimaryBooleanExpression PrimaryBooleanExpression() #PrimaryBooleanExpression
     jjtThis.setOpCode(ASTPrimaryBooleanExpression.OpCodes.EXPRESSION);
     return jjtThis;
   }
-|  Message() (t=<AFTER>|t=<BEFORE>) Message()
+  |  Message() (t=<AFTER>|t=<BEFORE>) Message()
   {
   	if ("after".equals(t.image)) {
   	  jjtThis.setOpCode(ASTPrimaryBooleanExpression.OpCodes.AFTER);
@@ -241,6 +257,11 @@ ASTPrimaryBooleanExpression PrimaryBooleanExpression() #PrimaryBooleanExpression
   	  jjtThis.setOpCode(ASTPrimaryBooleanExpression.OpCodes.BEFORE);
   	}
   	return jjtThis;
+  }
+  | <SEQUENCE> <LPAREN> Message() (< COMMA > Message())* <RPAREN>
+  {
+    jjtThis.setOpCode(ASTPrimaryBooleanExpression.OpCodes.SEQUENCE);
+    return jjtThis;
   }
   | RelationalExpression()
   {
@@ -251,7 +272,7 @@ ASTPrimaryBooleanExpression PrimaryBooleanExpression() #PrimaryBooleanExpression
     jjtThis.setOpCode(ASTPrimaryBooleanExpression.OpCodes.STATE);	// we'll change to off later if necessary
     return jjtThis;
   }
-  |  <RECEIVED> <LPAREN> MessageState() Identifier() <RPAREN> 
+  |  <RECEIVED> <LPAREN> Message() <RPAREN> 
   {
     jjtThis.setOpCode(ASTPrimaryBooleanExpression.OpCodes.RECEIVED);	// we'll change to off later if necessary
     return jjtThis;
@@ -262,12 +283,11 @@ ASTPrimaryBooleanExpression PrimaryBooleanExpression() #PrimaryBooleanExpression
 
 ASTMessage Message() #Message:
 {
-
 }
 {
   MessageState() Identifier()
   {
-return jjtThis;
+	return jjtThis;
   }
 }
 
@@ -296,7 +316,7 @@ ASTPrimaryIntegerExpression PrimaryIntegerExpression() #PrimaryIntegerExpression
     jjtThis.setOpCode(ASTPrimaryIntegerExpression.OpCodes.EXPRESSION);
     return jjtThis;
   }
-  |  <COUNT> <LPAREN> MessageState() Identifier() <RPAREN>
+  |  <COUNT> <LPAREN> Message() <RPAREN>
   {
     jjtThis.setOpCode(ASTPrimaryIntegerExpression.OpCodes.COUNT);
     return jjtThis;

@@ -196,6 +196,7 @@ int main(void) @0x800 {
 #endif
     BYTE sodDelay;
     BOOL started = FALSE;
+
     initRomOps();
 #ifdef NV_CACHE
     // If we are using the cache make sure we get the NVs early in initialisation
@@ -344,7 +345,7 @@ BOOL checkCBUS( void ) {
             return TRUE;
         }
         if (thisNN(msg)) {
-            // handle the CANMIO specifics
+            // handle the module specifics
             switch (msg[d0]) {
             case OPC_NNRSM: // reset to manufacturer defaults
                 factoryReset();
@@ -353,9 +354,9 @@ BOOL checkCBUS( void ) {
                 // if we just call main then the stack won't be reset and we'd also want variables to be nullified
                 // instead call the RESET vector (0x0000)
                 Reset();
-            case OPC_ARDAT:
+ /*           case OPC_ARDAT:
                 doArdat();
-                return TRUE;
+                return TRUE;*/
             }
         }
     }

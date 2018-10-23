@@ -25,181 +25,146 @@ import computeparser.ASTUnits;
 import computeparser.ComputeGrammarVisitor;
 import computeparser.SimpleNode;
 
-public class PrintVisitor implements ComputeGrammarVisitor {
-	private int indent = 0;
-	
-	private void indented(String text) {
-		for (int i=0; i<indent; i++) System.out.print(" ");
-		System.out.println(text);
-	}
+public class CbusDefinesVisitor implements ComputeGrammarVisitor {
 
 	@Override
 	public Object visit(SimpleNode node, Object data) {
-		indented("SimpleNode");
-		indent++;node.childrenAccept(this, data);indent--;
+		node.childrenAccept(this, data);
 		return null;
 	}
 	
+
 	@Override
 	public Object visit(ASTSimpleNode node, Object data) {
-		indented("ASTSimpleNode");
-		indent++;node.childrenAccept(this, data);indent--;
+		node.childrenAccept(this, data);
 		return null;
 	}
 
-
 	@Override
 	public Object visit(ASTDefineList node, Object data) {
-		indented("ASTDefineList");
-		indent++;node.childrenAccept(this, data);indent--;
+		System.out.println(":S0B20N53"+ASTSetNN.getNN()+";");	// LEARN
+		node.childrenAccept(this, data);
+		System.out.println(":S0B20N54"+ASTSetNN.getNN()+";");	// UNLEARN
 		return null;
 	}
 
 	@Override
 	public Object visit(ASTRuleList node, Object data) {
-		indented("ASTRuleList");
-		indent++;node.childrenAccept(this, data);indent--;
+		node.childrenAccept(this, data);
+		return null;
+	}
+ 
+	@Override
+	public Object visit(ASTDefine node, Object data) {		
+		ASTIdentifier id = (ASTIdentifier)node.jjtGetChild(0);
+		ASTEventLiteral ev = (ASTEventLiteral)node.jjtGetChild(1);
+		System.out.println(":S0B20ND2"+hexQuad(ev.getEvent().getNN())+hexQuad(ev.getEvent().getEN())+"01"+hexPair(Variables.getIndex())+";");	// EVLRN
+		Variables.setIndex(id.getName());
+		node.childrenAccept(this, data);
 		return null;
 	}
 
-	@Override
-	public Object visit(ASTDefine node, Object data) {
-		indented("ASTDefine");
-		indent++;node.childrenAccept(this, data);indent--;
-		return null;
+	private String hexPair(int ih) {
+		String h = "00"+Integer.toHexString(ih);
+		int l = h.length();
+		return h.substring(l-2,l);
+	}
+
+	private String hexQuad(int ih) {
+		String h = "0000"+Integer.toHexString(ih);
+		int l = h.length();
+		return h.substring(l-4,l);
 	}
 
 	@Override
 	public Object visit(ASTRule node, Object data) {
-		indented("ASTRule");
-		indent++;node.childrenAccept(this, data);indent--;
 		return null;
 	}
 
 	@Override
 	public Object visit(ASTTime node, Object data) {
-		indented("ASTTime");
-		indent++;node.childrenAccept(this, data);indent--;
 		return null;
 	}
 
 	@Override
 	public Object visit(ASTActionList node, Object data) {
-		indented("ASTActionList");
-		indent++;node.childrenAccept(this, data);indent--;
 		return null;
 	}
 
 	@Override
 	public Object visit(ASTAction node, Object data) {
-		indented("ASTAction");
-		indent++;node.childrenAccept(this, data);indent--;
 		return null;
 	}
 
 	@Override
 	public Object visit(ASTExpression node, Object data) {
-		indented("ASTExpression");
-		indent++;node.childrenAccept(this, data);indent--;
 		return null;
 	}
 
 	@Override
 	public Object visit(ASTOrExpression node, Object data) {
-		if (node.jjtGetNumChildren() > 1) {
-			indented("ASTOrExpression");
-			indent++;node.childrenAccept(this, data);indent--;
-		} else {
-			node.childrenAccept(this, data);
-		}
 		return null;
 	}
 
 	@Override
 	public Object visit(ASTAndExpression node, Object data) {
-		if (node.jjtGetNumChildren() > 1) {
-			indented("ASTAndExpression ");
-			indent++;node.childrenAccept(this, data);indent--;
-		} else {
-			node.childrenAccept(this, data);
-		}
 		return null;
 	}
 
 	@Override
 	public Object visit(ASTIdentifier node, Object data) {
-		indented("ASTIdentifier");
-		indent++;node.childrenAccept(this, data);indent--;
 		return null;
 	}
 
 	@Override
 	public Object visit(ASTEventLiteral node, Object data) {
-		indented("ASTEventLiteral");
-		indent++;node.childrenAccept(this, data);indent--;
 		return null;
 	}
 
 	@Override
 	public Object visit(ASTMessageState node, Object data) {
-		indented("ASTMessageState");
-		indent++;node.childrenAccept(this, data);indent--;
 		return null;
 	}
 
 	@Override
 	public Object visit(ASTRelationalExpression node, Object data) {
-		indented("ASTRelationalExpression "+node.getOpCode());
-		indent++;node.childrenAccept(this, data);indent--;
 		return null;
 	}
 
 	@Override
 	public Object visit(ASTAdditiveExpression node, Object data) {
-		indented("ASTAdditiveExpression "+node.getOpCode());
-		indent++;node.childrenAccept(this, data);indent--;
 		return null;
 	}
 
 	@Override
 	public Object visit(ASTUnits node, Object data) {
-		indented("ASTUnits "+node.getUnits());
 		return null;
 	}
 
 	@Override
 	public Object visit(ASTUnaryBooleanExpression node, Object data) {
-		indented("ASTUnaryBooleanExpression "+node.getOp());
-		indent++;node.childrenAccept(this, data);indent--;
 		return null;
 	}
 
 	@Override
 	public Object visit(ASTPrimaryBooleanExpression node, Object data) {
-		indented("ASTPrimaryBooleanExpression "+node.getOpCode());
-		indent++;node.childrenAccept(this, data);indent--;
 		return null;
 	}
 
 	@Override
 	public Object visit(ASTMessage node, Object data) {
-		indented("ASTMessage ");
-		indent++;node.childrenAccept(this, data);indent--;
 		return null;
 	}
 
 	@Override
 	public Object visit(ASTPrimaryIntegerExpression node, Object data) {
-		indented("ASTPrimaryIntegerExpression "+node.getOpCode());
-		indent++;node.childrenAccept(this, data);indent--;
+		return null;
+	}
+
+	@Override
+	public Object visit(ASTSetNN node, Object data) {
 		return null;
 	}
 	
-	@Override
-	public Object visit(ASTSetNN node, Object data) {
-		indented("ASTsetNN ");
-		indent++;node.childrenAccept(this, data);indent--;
-		return null;
-	}
 
 }

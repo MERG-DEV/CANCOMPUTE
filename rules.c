@@ -78,19 +78,23 @@ void runRules(void) {
 void doActions(BYTE nvi) {
     ACTION_T action;
     BYTE op;
+    BYTE evt;
     while (1) {
         op = getNv(nvi++);
-        action.arg = getNv(nvi++);
+
+        evt = getNv(nvi++);
         
         switch(op) {
             case DELAY:
                 action.op = ACTION_OPCODE_DELAY;
                 break;
-            case SEND_ON:
-                action.op = ACTION_OPCODE_SEND_ON;
-                break;
-            case SEND_OFF:
-                action.op = ACTION_OPCODE_SEND_OFF;
+            case SEND:
+                if (EVENT_STATE(evt)) {
+                    action.op = ACTION_OPCODE_SEND_ON;
+                } else {
+                    action.op = ACTION_OPCODE_SEND_OFF;
+                }
+                action.arg = EVENT_NO(evt);
                 break;
             default: 
                 nextQueue();
@@ -156,15 +160,8 @@ void loadExpression(BYTE expression) {
 		writeFlashByte((BYTE*)(&(expressions[expression].opCode)), nv);
 		
         switch(nv) {
-
-            case BEFORE_ON_ON:
-            case BEFORE_ON_OFF:
-            case BEFORE_OFF_ON:
-            case BEFORE_OFF_OFF:
-            case AFTER_ON_ON:
-            case AFTER_ON_OFF:
-            case AFTER_OFF_ON:
-            case AFTER_OFF_OFF:
+            case BEFORE:
+            case AFTER:
                 // Two events
                 val = getNv(nvPtr++);
                 writeFlashByte((BYTE*)(&(expressions[expression].op1.eventNo)), val);
@@ -174,10 +171,18 @@ void loadExpression(BYTE expression) {
                 writeFlashByte((BYTE*)(&(expressions[expression].op2.eventNo)), val);
                 if (val > (NUM_EVENTS -1)) {ruleState = INVALID_EVENT; return;}
                 break;
-            case RECEIVED_ON:
-            case RECEIVED_OFF:
-            case COUNT_ON:
-            case COUNT_OFF:
+            case SEQUENCE:
+                // length and offset
+                val = getNv(nvPtr++);
+                writeFlashByte((BYTE*)(&(expressions[expression].op1.integer)), val);
+                if (val > (NUM_EVENTS -1)) {ruleState = INVALID_EVENT; return;}
+                
+                val = getNv(nvPtr++);
+                writeFlashByte((BYTE*)(&(expressions[expression].op2.integer)), val);
+                if (val > (NUM_EVENTS -1)) {ruleState = INVALID_EVENT; return;}
+                break;
+            case RECEIVED:
+            case COUNT:
             case STATE_ON:
             case STATE_OFF:
                 // One event
@@ -233,8 +238,7 @@ void skipActions(void) {
     while (1) {
         ai = getNv(nvPtr++);
         switch (ai) {
-            case SEND_ON:
-            case SEND_OFF:
+            case SEND:
             case DELAY:
                 nvPtr++;    // skip the OPCODE's argument
                 break;
@@ -257,56 +261,28 @@ BYTE execute(BYTE e) {
     op2 = readFlashBlock(&(expressions[e].op2));
     
     switch(opCode) {
-        case BEFORE_ON_ON:// return true if event op1 is before op2 and both are present
+        case BEFORE:// return true if event op1 is before op2 and both are present
             if (op1 >= NUM_EVENTS) return 0;
             if (op2 >= NUM_EVENTS) return 0;
-            return sequence(op1, TRUE, op2, TRUE);
-        case BEFORE_ON_OFF:// return true if event op1 is before op2 and both are present
+            return sequence2(op1, op2);
+        case AFTER:// return true if event op1 is after op2 and both are present
             if (op1 >= NUM_EVENTS) return 0;
             if (op2 >= NUM_EVENTS) return 0;
-            return sequence(op1, TRUE, op2, FALSE);
-        case BEFORE_OFF_ON:// return true if event op1 is before op2 and both are present
-            if (op1 >= NUM_EVENTS) return 0;
-            if (op2 >= NUM_EVENTS) return 0;
-            return sequence(op1, FALSE, op2, TRUE);
-        case BEFORE_OFF_OFF:// return true if event op1 is before op2 and both are present
-            if (op1 >= NUM_EVENTS) return 0;
-            if (op2 >= NUM_EVENTS) return 0;
-            return sequence(op1, FALSE, op2, FALSE);
-        case AFTER_ON_ON:// return true if event op1 is after op2 and both are present
-            if (op1 >= NUM_EVENTS) return 0;
-            if (op2 >= NUM_EVENTS) return 0;
-            return sequence(op2, TRUE, op1, TRUE);
-        case AFTER_ON_OFF:// return true if event op1 is after op2 and both are present
-            if (op1 >= NUM_EVENTS) return 0;
-            if (op2 >= NUM_EVENTS) return 0;
-            return sequence(op2, TRUE, op1, FALSE);
-        case AFTER_OFF_ON:// return true if event op1 is after op2 and both are present
-            if (op1 >= NUM_EVENTS) return 0;
-            if (op2 >= NUM_EVENTS) return 0;
-            return sequence(op2, FALSE, op1, TRUE);
-        case AFTER_OFF_OFF:// return true if event op1 is after op2 and both are present
-            if (op1 >= NUM_EVENTS) return 0;
-            if (op2 >= NUM_EVENTS) return 0;
-            return sequence(op2, FALSE, op1, FALSE);
+            return sequence2(op2, op1);
+        case SEQUENCE:
+            return sequenceMulti(op1, op2);
         case STATE_ON:
             if (op1 >= NUM_EVENTS) return 0;
             return (currentEventState[op1] != 0);
         case STATE_OFF:
             if (op1 >= NUM_EVENTS) return 0;
             return (currentEventState[op1] == 0);
-        case COUNT_ON:
+        case COUNT:
             if (op1 >= NUM_EVENTS) return 0;
-            return count(op1, TRUE);
-        case COUNT_OFF:
+            return countEvent(op1);
+        case RECEIVED:
             if (op1 >= NUM_EVENTS) return 0;
-            return count(op1, FALSE);
-        case RECEIVED_ON:
-            if (op1 >= NUM_EVENTS) return 0;
-            return received(op1, TRUE);
-        case RECEIVED_OFF:
-            if (op1 >= NUM_EVENTS) return 0;
-            return received(op1, FALSE);
+            return receivedEvent(op1);
         case INTEGER:
             return op1;
         case NOT:
