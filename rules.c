@@ -4,6 +4,7 @@
 #include "romops.h"
 #include "actionQueue.h"
 #include "computeActions.h"
+#include "hwsettings.h"
 
 // forward declarations
 BYTE newRule(void);
@@ -58,6 +59,7 @@ void runRules(void) {
     BYTE rule;
     BYTE result;
     BYTE b;
+    LED_BLUE = LED_ON;
     for (rule=0; rule<ruleIndex; rule++) {
         b = readFlashBlock(&(rules[rule].expression));
         timeLimit = readFlashBlock(&(rules[rule].within));
@@ -73,6 +75,7 @@ void runRules(void) {
             }
         }
     }
+    LED_BLUE = LED_OFF;
 }
 
 void doActions(BYTE nvi) {

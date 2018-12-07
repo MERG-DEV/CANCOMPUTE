@@ -72,8 +72,10 @@ extern "C" {
 #define FLiM_SW         PORTAbits.RA2
 #define LED1Y           LATBbits.LATB6  // Yellow LED
 #define LED2G           LATBbits.LATB7  // Green LED
+#define LED_BLUE        LATBbits.LATB4  // Blue LED
 #define TRIS_LED1Y      TRISBbits.TRISB6
 #define TRIS_LED2G      TRISBbits.TRISB7
+#define TRIS_BLUE_LED   TRISBbits.TRISB4
 
 #define LED_ON          1               // LEDs are active high
 #define LED_OFF         0

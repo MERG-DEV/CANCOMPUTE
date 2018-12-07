@@ -17,14 +17,14 @@ define $R1 = NN:0000 EN:9999;
 //3456789012345678901234567890123456789012345678901234567890
 //       1         2         3         4         5
 // Now define some rules
-#when state($p1) is on within 1sec send on$sent;
-#when state($p1) is off within 1sec send off$sent;
+when state($p1) is on within 1sec send on$sent;
+when state($p1) is off within 1sec send off$sent;
 #when off$p1 before off$p2 within 3sec send on$sent, delay 2sec, send off$sent;
 #when received(on$p1) and received(on$p2) within 3sec send on$sent then send off$sent;
 #when off$p1 before on$p2 within 1sec send off$sent;
 #when on$p1 before off$p2 within 1sec send off$sent;
 #when on$p1 before on$p2 within 1sec send off$sent;
-when off$p1 after off$p2 within 1sec send off$sent;
+#when off$p1 after off$p2 within 1sec send off$sent;
 #when off$p1 after on$p2 within 1sec send off$sent;
 #when on$p1 after off$p2 within 1sec send off$sent;
 #when on$p1 after on$p2 within 1sec send off$sent;
@@ -44,5 +44,5 @@ when off$p1 after off$p2 within 1sec send off$sent;
 #when not count(on$p1) is 0 within 1sec send on$sent then send off$sent;
 #when state($p1) is on within 1sec send on$sent, delay 2sec, send off$sent;
 
-when state($P13)=on and state($P14)=on and state($P16)=on and state($P15)=off within 100ms send on$R1;
-when sequence(on$P13, off$P14, on$P15, off$P16) within 1s send on$sent;
+#when state($P13)=on and state($P14)=on and state($P16)=on and state($P15)=off within 100ms send on$R1;
+#when sequence(on$P13, off$P14, on$P15, off$P16) within 1s send on$sent;

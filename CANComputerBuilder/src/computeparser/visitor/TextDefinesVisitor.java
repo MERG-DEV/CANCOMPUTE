@@ -25,7 +25,7 @@ import computeparser.ASTUnits;
 import computeparser.ComputeGrammarVisitor;
 import computeparser.SimpleNode;
 
-public class DefinesVisitor implements ComputeGrammarVisitor {
+public class TextDefinesVisitor implements ComputeGrammarVisitor {
 	
 	@Override
 	public Object visit(SimpleNode node, Object data) {
@@ -42,6 +42,7 @@ public class DefinesVisitor implements ComputeGrammarVisitor {
 
 	@Override
 	public Object visit(ASTDefineList node, Object data) {
+		System.out.println("*****Defines");
 		node.childrenAccept(this, data);
 		return null;
 	}

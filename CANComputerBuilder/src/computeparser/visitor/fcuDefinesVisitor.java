@@ -25,8 +25,8 @@ import computeparser.ASTUnits;
 import computeparser.ComputeGrammarVisitor;
 import computeparser.SimpleNode;
 
-public class CbusDefinesVisitor implements ComputeGrammarVisitor {
-
+public class fcuDefinesVisitor implements ComputeGrammarVisitor {
+	
 	@Override
 	public Object visit(SimpleNode node, Object data) {
 		node.childrenAccept(this, data);
@@ -42,9 +42,8 @@ public class CbusDefinesVisitor implements ComputeGrammarVisitor {
 
 	@Override
 	public Object visit(ASTDefineList node, Object data) {
-		System.out.println(":S0B20N53"+ASTSetNN.getNN()+";");	// LEARN
+		System.out.println("*****Defines");
 		node.childrenAccept(this, data);
-		System.out.println(":S0B20N54"+ASTSetNN.getNN()+";");	// UNLEARN
 		return null;
 	}
 
@@ -58,22 +57,11 @@ public class CbusDefinesVisitor implements ComputeGrammarVisitor {
 	public Object visit(ASTDefine node, Object data) {		
 		ASTIdentifier id = (ASTIdentifier)node.jjtGetChild(0);
 		ASTEventLiteral ev = (ASTEventLiteral)node.jjtGetChild(1);
-		System.out.println(":S0B20ND2"+hexQuad(ev.getEvent().getNN())+hexQuad(ev.getEvent().getEN())+"01"+hexPair(Variables.getIndex())+";");	// EVLRN
+		System.out.println("Got a define for identifier("+id.getName()+")="+ev.getEvent());
+		System.out.println("Add Event "+ev.getEvent()+" EV#1="+Variables.getIndex());
 		Variables.setIndex(id.getName());
 		node.childrenAccept(this, data);
 		return null;
-	}
-
-	private String hexPair(int ih) {
-		String h = "00"+Integer.toHexString(ih);
-		int l = h.length();
-		return h.substring(l-2,l);
-	}
-
-	private String hexQuad(int ih) {
-		String h = "0000"+Integer.toHexString(ih);
-		int l = h.length();
-		return h.substring(l-4,l);
 	}
 
 	@Override
