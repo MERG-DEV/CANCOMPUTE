@@ -130,6 +130,7 @@ void load(void) {
 		writeFlashByte((BYTE*)(&(rules[r].within)), getNv(nvPtr++));
     	writeFlashByte((BYTE*)(&(rules[r].expression)), newExpression());
         loadExpression(readFlashBlock(&rules[r].expression));
+        if (ruleState != VALID) break;
         writeFlashByte((BYTE*)(&(rules[r].actions)), nvPtr);   // point to the actions in the NVs
 		skipActions();
         nv = getNv(nvPtr);
@@ -165,30 +166,35 @@ void loadExpression(BYTE expression) {
         switch(nv) {
             case BEFORE:
             case AFTER:
-                // Two events
+                // Two events with on/off state
                 val = getNv(nvPtr++);
                 writeFlashByte((BYTE*)(&(expressions[expression].op1.eventNo)), val);
-                if (val > (NUM_EVENTS -1)) {ruleState = INVALID_EVENT; return;}
+                if (EVENT_NO(val) > (NUM_EVENTS -1)) {ruleState = INVALID_EVENT; return;}
                 
                 val = getNv(nvPtr++);
                 writeFlashByte((BYTE*)(&(expressions[expression].op2.eventNo)), val);
-                if (val > (NUM_EVENTS -1)) {ruleState = INVALID_EVENT; return;}
+                if (EVENT_NO(val) > (NUM_EVENTS -1)) {ruleState = INVALID_EVENT; return;}
                 break;
             case SEQUENCE:
-                // length and offset
+                // length and offset of events with on/off state
                 val = getNv(nvPtr++);
                 writeFlashByte((BYTE*)(&(expressions[expression].op1.integer)), val);
-                if (val > (NUM_EVENTS -1)) {ruleState = INVALID_EVENT; return;}
+                if (EVENT_NO(val) > (NUM_EVENTS -1)) {ruleState = INVALID_EVENT; return;}
                 
                 val = getNv(nvPtr++);
                 writeFlashByte((BYTE*)(&(expressions[expression].op2.integer)), val);
-                if (val > (NUM_EVENTS -1)) {ruleState = INVALID_EVENT; return;}
+                if (EVENT_NO(val) > (NUM_EVENTS -1)) {ruleState = INVALID_EVENT; return;}
                 break;
             case RECEIVED:
             case COUNT:
+                // One event with on/off state
+                val = getNv(nvPtr++);
+                writeFlashByte((BYTE*)(&(expressions[expression].op1.eventNo)), val);
+                if (EVENT_NO(val) > (NUM_EVENTS -1)) {ruleState = INVALID_EVENT; return;}
+                break;
             case STATE_ON:
             case STATE_OFF:
-                // One event
+                // One event WITHOUT on/off state
                 val = getNv(nvPtr++);
                 writeFlashByte((BYTE*)(&(expressions[expression].op1.eventNo)), val);
                 if (val > (NUM_EVENTS -1)) {ruleState = INVALID_EVENT; return;}
@@ -265,12 +271,12 @@ BYTE execute(BYTE e) {
     
     switch(opCode) {
         case BEFORE:// return true if event op1 is before op2 and both are present
-            if (op1 >= NUM_EVENTS) return 0;
-            if (op2 >= NUM_EVENTS) return 0;
+            if (EVENT_NO(op1) >= NUM_EVENTS) return 0;
+            if (EVENT_NO(op2) >= NUM_EVENTS) return 0;
             return sequence2(op1, op2);
         case AFTER:// return true if event op1 is after op2 and both are present
-            if (op1 >= NUM_EVENTS) return 0;
-            if (op2 >= NUM_EVENTS) return 0;
+            if (EVENT_NO(op1) >= NUM_EVENTS) return 0;
+            if (EVENT_NO(op2) >= NUM_EVENTS) return 0;
             return sequence2(op2, op1);
         case SEQUENCE:
             return sequenceMulti(op1, op2);
@@ -281,10 +287,10 @@ BYTE execute(BYTE e) {
             if (op1 >= NUM_EVENTS) return 0;
             return (currentEventState[op1] == 0);
         case COUNT:
-            if (op1 >= NUM_EVENTS) return 0;
+            if (EVENT_NO(op1) >= NUM_EVENTS) return 0;
             return countEvent(op1);
         case RECEIVED:
-            if (op1 >= NUM_EVENTS) return 0;
+            if (EVENT_NO(op1) >= NUM_EVENTS) return 0;
             return receivedEvent(op1);
         case INTEGER:
             return op1;

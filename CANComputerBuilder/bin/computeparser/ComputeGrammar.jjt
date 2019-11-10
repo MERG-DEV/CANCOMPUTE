@@ -1,0 +1,372 @@
+/**
+ * JJTree template file created by SF JavaCC plugin 1.5.28+ wizard for JavaCC 1.5.0+
+
+defines: define*
+define: "define" identifier "=" eventLiteral
+rules: rule*
+rule: "if" "receive" <expression> "within" <time> "then" <action>+
+expression: "event" <event_expression>
+event_expression: event_and_expression "or" event_and_expression
+event_and_expression: event_unary_expression "and" event_unary_expression
+event_unary_expression: ("not") event_unary_expression
+ | event_primary_expression
+event_primary_expression: "(" event_expression ")"
+ | event_list
+ | event
+ action: ( "send" <event_list> ) | ("delay" < time >
+
+event_list: event "," event_list
+event: eventLiteral | identifier
+eventLieteral: [eventLength] NNEN [evenetState]
+eventLength: ("long" | "short")
+eventState: ("on" | "off")
+NNEN: {HEXDigit}4
+
+ */options{
+  MULTI = true;  STATIC = true;
+  VISITOR = true;
+  BUILD_NODE_FILES = true;
+  NODE_DEFAULT_VOID = true;
+  NODE_PREFIX = "AST";}PARSER_BEGIN(ComputeGrammar)package computeparser;
+
+public class ComputeGrammar{  public static void main(String args [])  {    System.out.println("Reading from standard input...");    System.out.print("Enter an expression like \"1+(2+3)*var;\" :");    new ComputeGrammar(System.in);    try    {      SimpleNode n = ComputeGrammar.Start();      n.dump("");      System.out.println("Thank you.");    }    catch (Exception e)    {      System.out.println("Oops.");      System.out.println(e.getMessage());    }  }}PARSER_END(ComputeGrammar)SKIP :{  " "| "\t"| "\n"| "\r"| < "//" (~[ "\n", "\r" ])*    (      "\n"    | "\r"    | "\r\n"    ) >
+| < "#" (~[ "\n", "\r" ])*
+    (
+      "\n"
+    | "\r"
+    | "\r\n"
+    ) >| < "/*" (~[ "*" ])* "*"    (      ~[ "/" ] (~[ "*" ])* "*"    )*    "/" >}TOKEN : /* LITERALS */{  < INTEGER_LITERAL :    < DECIMAL_LITERAL >   | < HEX_LITERAL >   | < OCTAL_LITERAL >     >| < #DECIMAL_LITERAL : [ "1"-"9" ] ([ "0"-"9" ])* >| < #HEX_LITERAL : "0" [ "x", "X" ] ([ "0"-"9", "a"-"f", "A"-"F" ])+ >| < #OCTAL_LITERAL : "0" ([ "0"-"7" ])* >}
+
+TOKEN : /* LITERALS */
+{
+  < EVENT_LITERAL  :
+   "NN:" (< DECIMAL_LITERAL > 
+  | < HEX_LITERAL > 
+  | < OCTAL_LITERAL >)
+  "EN:" (< DECIMAL_LITERAL > 
+  | < HEX_LITERAL > 
+  | < OCTAL_LITERAL > )
+    >
+}TOKEN : /* IDENTIFIERS */{  < IDENTIFIER :    "$" < LETTER >    (      < LETTER >    | < DIGIT >    )* >| < #LETTER : [ "_", "a"-"z", "A"-"Z" ] >| < #DIGIT : [ "0"-"9" ] >}
+
+TOKEN : /* KEYWORDS and OPERATORS*/
+{
+  < AND: "and" >
+  | < BEFORE: "before" >
+  | < AFTER: "after" >
+  | < SEQUENCE: "sequence" >
+  | < OR: "or" >
+  | < ON: "on" >
+  | < OFF: "off" >
+  | < NN: "NN:" >
+  | < EN: "EN:" >
+  | < COUNT: "count" >
+  | < STATE: "state" >
+  | < RECEIVED: "received" >
+  | < SEMICOLON: ";" >
+  | < COMMA: "," >
+  | < DEFINE: "define" >
+  | < DELAY: "delay" >
+  | < WHEN: "when" >
+  | < SEND: "send" >
+  | < THEN: "then" >
+  | < WITHIN: "within" >
+  | < LPAREN: "(" >
+  | < RPAREN: ")" >
+  | < EQ: "=" >
+  | < LONGEQ: "equals" >
+  | < ISEQ: "is" >
+  | < NOT: "not" >
+  | < NE: "!=" >
+  | < LT: "<" >
+  | < LE: "<=" >
+  | < GT: ">" >
+  | < GE: ">=" >
+  | < PLUS: "+" >
+  | < MINUS: "-" >
+  | < MILLISEC: "ms" >
+  | < SEC: "sec" >
+  | < SHORTSEC: "s" >
+}ASTSimpleNode Start() #SimpleNode:{
+}{  [ SetNN() ] DefineList() RuleList()  {    return jjtThis;  }}
+
+ASTSetNN SetNN() #SetNN:
+{
+  Token n = null;
+}
+{
+  <NN> n=<INTEGER_LITERAL> <SEMICOLON>
+  {
+    jjtThis.setNN(n.image);
+    return jjtThis;
+  }
+}
+
+ASTDefineList DefineList() #DefineList:
+{
+}
+{  ( Define() )*
+    {
+    return jjtThis;
+  }
+}
+
+ASTRuleList RuleList() #RuleList:
+{
+}
+{
+  ( Rule() )*
+    {
+    return jjtThis;
+  }
+}
+
+ASTDefine Define() #Define:
+{
+}
+{
+  <DEFINE> Identifier() <EQ> EventLiteral() <SEMICOLON>
+    {
+    return jjtThis;
+  }}
+
+ASTRule Rule() #Rule:
+{
+}
+{
+  <WHEN> BooleanExpression() <WITHIN> Time() ActionList() (<THEN> ActionList())? <SEMICOLON>
+    {
+    return jjtThis;
+  }}
+
+ASTTime Time() #Time:
+{
+  Token t = null;
+}
+{
+  t=<INTEGER_LITERAL> Units()
+  {
+    jjtThis.setTime(t.image);
+    ASTUnits u = (ASTUnits)(jjtThis.jjtGetChild(0));
+    if (jjtThis.getTime()*u.getUnits() > 25500) {
+	  int error_line = jj_input_stream.getEndLine();
+      int error_column = jj_input_stream.getEndColumn();
+      System.out.println("Error Time value "+jjtThis.getTime()+" at line "+error_line+" column "+error_column+
+      						" is too big and will be set to maximum");
+      jjtThis.setTime(""+(25500/u.getUnits()));
+    } 
+  	return jjtThis;
+  }}
+
+ASTUnits Units() #Units:
+{
+  Token t = null;
+}
+{
+  (t=<SEC>| t=<SHORTSEC> | t=<MILLISEC>)
+  {
+    if (t.image.charAt(0) == 's') {
+      jjtThis.setUnits(1000);
+    } else {
+      jjtThis.setUnits(1);
+    }
+    return jjtThis;
+  }
+}
+
+ASTActionList ActionList() #ActionList:
+{
+}
+{  Action() (<COMMA> Action())*
+    {
+    return jjtThis;
+  }
+}
+
+ASTAction Action() #Action:
+{
+}
+{    <SEND> Message()
+      {
+        jjtThis.setAction(ASTAction.OpCodes.SEND);
+    	return jjtThis;
+  	  }
+  | <DELAY> Message()
+    {
+        jjtThis.setAction(ASTAction.OpCodes.DELAY);
+    	return jjtThis;
+  	}
+}
+
+
+// Below are expressions returning booleansASTExpression BooleanExpression() #Expression:{
+}{  OrExpression()
+    {
+    return jjtThis;
+  }}
+ASTOrExpression OrExpression() #OrExpression:{
+}{  AndExpression() ( <OR> AndExpression() )*
+    {
+    return jjtThis;
+  }}ASTAndExpression AndExpression() #AndExpression:{
+}{  UnaryBooleanExpression() ( <AND> UnaryBooleanExpression() )*
+    {
+    return jjtThis;
+  }
+}
+
+ASTUnaryBooleanExpression UnaryBooleanExpression() #UnaryBooleanExpression:
+{
+  Token t=null;
+}
+{
+  (t=<NOT> { jjtThis.setOp(true); })* PrimaryBooleanExpression()
+  {
+    return jjtThis;
+  }}
+
+ASTRelationalExpression RelationalExpression() #RelationalExpression:
+{
+  Token t = null;
+}
+{
+    
+        AdditiveExpression() ( ( t=<LT> | t=<LE> | t=<GT> | t=<GE> | t=<EQ> | t=<LONGEQ> | t=<ISEQ> | t=<NE>) AdditiveExpression() )*
+        {
+          if (t != null) jjtThis.setOpCode(t.image);
+          return jjtThis;
+        }
+}
+
+ASTPrimaryBooleanExpression PrimaryBooleanExpression() #PrimaryBooleanExpression:
+{
+  Token t = null;
+}
+{
+  LOOKAHEAD(2)
+  <LPAREN> BooleanExpression() <RPAREN>
+  {
+    jjtThis.setOpCode(ASTPrimaryBooleanExpression.OpCodes.EXPRESSION);
+    return jjtThis;
+  }
+  |  Message() (t=<AFTER>|t=<BEFORE>) Message()
+  {
+  	if ("after".equals(t.image)) {
+  	  jjtThis.setOpCode(ASTPrimaryBooleanExpression.OpCodes.AFTER);
+  	} else {
+  	  jjtThis.setOpCode(ASTPrimaryBooleanExpression.OpCodes.BEFORE);
+  	}
+  	return jjtThis;
+  }
+  | <SEQUENCE> <LPAREN> Message() (< COMMA > Message())* <RPAREN>
+  {
+    jjtThis.setOpCode(ASTPrimaryBooleanExpression.OpCodes.SEQUENCE);
+    return jjtThis;
+  }
+  | RelationalExpression()
+  {
+    return jjtThis;
+  }
+  |  <STATE> <LPAREN> Identifier() <RPAREN> (<EQ> | <LONGEQ> | <ISEQ>) MessageState() 
+  {
+    jjtThis.setOpCode(ASTPrimaryBooleanExpression.OpCodes.STATE);	// we'll change to off later if necessary
+    return jjtThis;
+  }
+  |  <RECEIVED> <LPAREN> Message() <RPAREN> 
+  {
+    jjtThis.setOpCode(ASTPrimaryBooleanExpression.OpCodes.RECEIVED);	// we'll change to off later if necessary
+    return jjtThis;
+  }
+  
+}
+
+
+ASTMessage Message() #Message:
+{
+}
+{
+  MessageState() Identifier()
+  {
+	return jjtThis;
+  }
+}
+
+// Below are expressions returning integers
+
+ASTAdditiveExpression AdditiveExpression() #AdditiveExpression:
+{
+  Token t = null;
+}
+{
+    
+        PrimaryIntegerExpression() ( ( t=<PLUS> | t=< MINUS > ) PrimaryIntegerExpression() )*
+        {
+          if (t != null) jjtThis.setOpCode(t.image);
+          return jjtThis;
+        }
+}
+
+ASTPrimaryIntegerExpression PrimaryIntegerExpression() #PrimaryIntegerExpression:
+{
+  Token t = null;
+}
+{
+  <LPAREN> AdditiveExpression() <RPAREN>
+  {
+    jjtThis.setOpCode(ASTPrimaryIntegerExpression.OpCodes.EXPRESSION);
+    return jjtThis;
+  }
+  |  <COUNT> <LPAREN> Message() <RPAREN>
+  {
+    jjtThis.setOpCode(ASTPrimaryIntegerExpression.OpCodes.COUNT);
+    return jjtThis;
+  }
+  |  t=<INTEGER_LITERAL> 
+  {
+    jjtThis.setInt(t.image);
+    if (jjtThis.getInt() > 255) {
+      int error_line = jj_input_stream.getEndLine();
+      int error_column = jj_input_stream.getEndColumn();
+      System.out.println("Error integer value "+jjtThis.getInt()+" at line "+error_line+" column "+error_column+
+      							" is too big and will be set to maximum");
+	  jjtThis.setInt("255");
+    } 
+    jjtThis.setOpCode(ASTPrimaryIntegerExpression.OpCodes.INTEGER);
+    return jjtThis;
+  }
+}
+ // event stuffASTIdentifier Identifier() #Identifier:{
+  Token t = null;
+}{  t=<IDENTIFIER>
+  {
+    jjtThis.setName(t.image);
+  	return jjtThis;
+  }}
+
+ASTEventLiteral EventLiteral() #EventLiteral:{
+  Token n=null;
+  Token e=null;
+}{  <NN> n=<INTEGER_LITERAL> <EN> e=<INTEGER_LITERAL>
+  {
+    jjtThis.setEvent(n.image, e.image);
+    return jjtThis;
+  }}
+
+
+ASTMessageState MessageState() #MessageState:
+{
+  Token t = null;
+}
+{
+  t=<ON>
+  {
+    jjtThis.setState(t.image);
+  	return jjtThis;
+  }
+  | t=<OFF>
+  {
+    jjtThis.setState(t.image);
+  	return jjtThis;
+  }
+}
+

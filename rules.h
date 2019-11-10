@@ -77,7 +77,7 @@ typedef enum  {
     VALID                   =0,
     TOO_MANY_RULES          =1,
     TOO_MANY_EXPRESSIONS    =2,
-    TOO_MANY_OPERANDS       =3,
+    //TOO_MANY_OPERANDS       =3,
     TOO_MANY_ACTIONS        =4,
     UNKNOWN_INSTRUCTION     =5,
     UNKNOWN_ACTION          =6,
