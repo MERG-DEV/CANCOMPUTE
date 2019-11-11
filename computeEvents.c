@@ -91,9 +91,11 @@ void processEvent(BYTE tableIndex, BYTE * msg) {
         // this shouldn't happen
         return;
     }
-    if (opc&EVENT_ON_MASK) {
+    if (! opc&EVENT_ON_MASK) {
+        // ON EVENT
         rxBuffers[bufferIndex].eventNoAndOnOff = ev | EVENT_ON; // the user's reference index is in ev#1
     } else {
+        //OFF EVENT
         rxBuffers[bufferIndex].eventNoAndOnOff = EVENT_NO(ev); // the user's reference index is in ev#1
     }
     /* disable the timer to prevent roll over of the lower 16 bits while before/after reading of the extension */
@@ -102,7 +104,7 @@ void processEvent(BYTE tableIndex, BYTE * msg) {
     /* enable the timer*/
     TMR_IE = 1;
     // store current state
-    currentEventState[ev] = !(opc&EVENT_ON_MASK);
+    currentEventState[ev] = !(opc&EVENT_ON_MASK);   // set if ON event
         
     bufferIndex++;
     if (bufferIndex >= NUM_BUFFERS) bufferIndex = 0;
@@ -115,10 +117,10 @@ BOOL getDefaultProducedEvent(PRODUCER_ACTION_T paction) {
 
 /**
  * Return true if the event has been received within the time window.
- * @param eventNo the event number (not the EN) including on/off
+ * @param eventNoAndState the event number (not the EN) including on/off
  * @return true if the event has been received within the time window
  */
-BOOL receivedEvent(BYTE eventNo) {
+BOOL receivedEvent(BYTE eventNoAndState) {
     BYTE bi;
     BYTE i;
     
@@ -131,7 +133,7 @@ BOOL receivedEvent(BYTE eventNo) {
     // go backwards through the buffer list until we exceed the time limit
     for (i=0; i<NUM_BUFFERS; i++) {
         if ((globalTimeStamp - rxBuffers[bi].time) > timeLimit) break;
-        if (rxBuffers[bi].eventNoAndOnOff == eventNo) {
+        if (rxBuffers[bi].eventNoAndOnOff == eventNoAndState) {
             return TRUE;
         }
         if (bi == 0) {
@@ -145,10 +147,10 @@ BOOL receivedEvent(BYTE eventNo) {
 
 /**
  * Count the number of times we have received the specified event within the specified timeLimit time.
- * @param eventNo the event number (not the EN) including on/off
+ * @param eventNoAndState the event number (not the EN) including on/off
  * @return the count of the number of times the event has been received within the time window
  */
-BYTE countEvent(BYTE eventNo) {
+BYTE countEvent(BYTE eventNoAndState) {
     BYTE bi;
     BYTE ret = 0;
     BYTE i;
@@ -162,7 +164,7 @@ BYTE countEvent(BYTE eventNo) {
      // go backwards through the buffer list until we exceed the time limit
     for (i=0; i<NUM_BUFFERS; i++) {
         if ((globalTimeStamp - rxBuffers[bi].time) > timeLimit) break;
-        if (rxBuffers[bi].eventNoAndOnOff == eventNo) {
+        if (rxBuffers[bi].eventNoAndOnOff == eventNoAndState) {
             ret++;
             if (ret == 255) return ret;
         }
@@ -177,11 +179,11 @@ BYTE countEvent(BYTE eventNo) {
 
 /**
  *  return TRUE if event1 and event2 are within time and event1 occurs before event2
- * @param event1 the event number (not the EN) including on/off
- * @param event2 the event number (not the EN) including on/off
+ * @param event1AndState the event number (not the EN) including on/off
+ * @param event2AndState the event number (not the EN) including on/off
  * @return true if the event has been received within the time window
  */
-BYTE sequence2 (BYTE event1, BYTE event2) {
+BYTE sequence2 (BYTE event1AndState, BYTE event2AndState) {
     BYTE bi;
     BYTE ret = 0;
     BYTE i;
@@ -194,10 +196,10 @@ BYTE sequence2 (BYTE event1, BYTE event2) {
  
     for (i=0; i<NUM_BUFFERS; i++) {
         if ((globalTimeStamp - rxBuffers[bi].time) > timeLimit) break;
-        if (rxBuffers[bi].eventNoAndOnOff == event2) {
+        if (rxBuffers[bi].eventNoAndOnOff == event2AndState) {
             for ( ; i<NUM_BUFFERS; i++) {
                 if ((globalTimeStamp - rxBuffers[bi].time) > timeLimit) break;
-                if (rxBuffers[bi].eventNoAndOnOff == event1) {
+                if (rxBuffers[bi].eventNoAndOnOff == event1AndState) {
                     return TRUE;
                 }
                 if (bi == 0) {
