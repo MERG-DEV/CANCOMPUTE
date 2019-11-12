@@ -91,7 +91,7 @@ void processEvent(BYTE tableIndex, BYTE * msg) {
         // this shouldn't happen
         return;
     }
-    if (! opc&EVENT_ON_MASK) {
+    if (! (opc&EVENT_ON_MASK)) {
         // ON EVENT
         rxBuffers[bufferIndex].eventNoAndOnOff = ev | EVENT_ON; // the user's reference index is in ev#1
     } else {
