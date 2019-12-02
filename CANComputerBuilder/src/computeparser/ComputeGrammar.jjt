@@ -191,7 +191,7 @@ ASTAction Action() #Action:
         jjtThis.setAction(ASTAction.OpCodes.SEND);
     	return jjtThis;
   	  }
-  | <DELAY> Message()
+  | <DELAY> Time()
     {
         jjtThis.setAction(ASTAction.OpCodes.DELAY);
     	return jjtThis;

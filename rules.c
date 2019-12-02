@@ -90,6 +90,7 @@ void doActions(BYTE nvi) {
         switch(op) {
             case DELAY:
                 action.op = ACTION_OPCODE_DELAY;
+                action.arg = evt;
                 break;
             case SEND:
                 if (EVENT_STATE(evt)) {
