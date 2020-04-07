@@ -182,9 +182,8 @@ void loadExpression(BYTE expression) {
                 writeFlashByte((BYTE*)(&(expressions[expression].op1.integer)), val);
                 if (EVENT_NO(val) > (NUM_EVENTS -1)) {ruleState = INVALID_EVENT; return;}
                 
-                val = getNv(nvPtr++);
-                writeFlashByte((BYTE*)(&(expressions[expression].op2.integer)), val);
-                if (EVENT_NO(val) > (NUM_EVENTS -1)) {ruleState = INVALID_EVENT; return;}
+                val = nvPtr++;
+                writeFlashByte((BYTE*)(&(expressions[expression].op2.integer)), val);       // save nvPtr in op2
                 break;
             case RECEIVED:
             case COUNT:

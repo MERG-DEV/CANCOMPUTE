@@ -240,11 +240,13 @@ BYTE sequenceMulti(BYTE num, BYTE nvIndex) {
     if (num == 0) return TRUE;
  
     for (i=0; i<NUM_BUFFERS; i++) {
+        
         if ((globalTimeStamp - rxBuffers[bi].time) > timeLimit) break;  // didn't find all in time
         
         if (rxBuffers[bi].eventNoAndOnOff == getNv(nvi)) {  // found next event
             nvi++;
-            if (nvIndex >= nvIndex+num) return TRUE;    // reached end
+            num--;
+            if (num == 0) return TRUE;    // reached end 
         }
         if (bi == 0) {
             bi = NUM_BUFFERS;

@@ -330,6 +330,10 @@ void factoryResetFlash(void) {
     flushFlashImage();
 }
 
+unsigned char isSuitableTimeToWriteFlash() {
+    return TRUE;
+}
+
 /**
  * Check to see if a message has been received on the CBUS and process 
  * it if one has been received.
