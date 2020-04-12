@@ -181,7 +181,7 @@ rom BYTE eeBootFlag = 0;
 #endif
 
 
-ACTION_T NO_ACTION = {NOP,0};
+COMPUTE_ACTION_T NO_ACTION = {NOP,0};
 
 // MAIN APPLICATION
 #pragma code

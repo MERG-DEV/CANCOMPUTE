@@ -19,7 +19,7 @@ void initActions(void) {
 void processActions(void) {
     BYTE q;
     for (q=0; q<NUM_ACTION_QUEUES; q++) {
-        ACTION_T action = getAction(q);
+        COMPUTE_ACTION_T action = getAction(q);
 
         if (action.op == ACTION_OPCODE_NOP) {
             doneAction(q);

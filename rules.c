@@ -79,7 +79,7 @@ void runRules(void) {
 }
 
 void doActions(BYTE nvi) {
-    ACTION_T action;
+    COMPUTE_ACTION_T action;
     BYTE op;
     BYTE evt;
     while (1) {
@@ -153,6 +153,7 @@ void load(void) {
 void loadExpression(BYTE expression) {
 		BYTE nv = getNv(nvPtr++);
         BYTE val;
+        BYTE num;
         BYTE op_index, expr_index;
         
         if (expression >= NUM_EXPRESSIONS) return;
@@ -178,12 +179,13 @@ void loadExpression(BYTE expression) {
                 break;
             case SEQUENCE:
                 // length and offset of events with on/off state
-                val = getNv(nvPtr++);
-                writeFlashByte((BYTE*)(&(expressions[expression].op1.integer)), val);
-                if (EVENT_NO(val) > (NUM_EVENTS -1)) {ruleState = INVALID_EVENT; return;}
+                num = getNv(nvPtr++);   // number loaded from NV
+                writeFlashByte((BYTE*)(&(expressions[expression].op1.integer)), num);
                 
-                val = nvPtr++;
+                val = nvPtr;    // Offset from the current pointer where the events are
                 writeFlashByte((BYTE*)(&(expressions[expression].op2.integer)), val);       // save nvPtr in op2
+                
+                nvPtr += num;   // skip over the events
                 break;
             case RECEIVED:
             case COUNT:

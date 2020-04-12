@@ -83,8 +83,8 @@ extern void computeEventsInit(void);
 #define PRODUCED_EVENTS
 #define ConsumedActionType  BYTE;
 
-#define ACTION_PRODUCER_BASE    0
-#define NUM_PRODUCER_ACTIONS    256                 // Since we are using 255 for SOD this must be beyond the expected NUM_EVENTS
+#define HAPPENING_BASE    0
+#define NUM_HAPPENINGS    256                 // Since we are using 255 for SOD this must be beyond the expected NUM_EVENTS
 #define ACTION_PRODUCER_SOD     255                 // EV#1 with 255 indicates the Produced SOD
 
 extern void processEvent(BYTE eventIndex, BYTE* message);

@@ -43,7 +43,7 @@
 
 //BYTE normalReadIdx[NUM_ACTION_QUEUES];                   // index of the next to read
 //BYTE normalWriteIdx[NUM_ACTION_QUEUES];                  // index of the next to write
-ACTION_T normalQueueBuf[ACTION_QUEUE_SIZE][NUM_ACTION_QUEUES];   // the actual cyclic buffer space
+COMPUTE_ACTION_T normalQueueBuf[ACTION_QUEUE_SIZE][NUM_ACTION_QUEUES];   // the actual cyclic buffer space
 Queue normalQueue[NUM_ACTION_QUEUES];
 static BYTE currentPushQueue;
 
@@ -66,7 +66,7 @@ void actionQueueInit(void) {
  *
  * @param a the action to be processed
  */
-BOOL pushAction(ACTION_T a) {
+BOOL pushAction(COMPUTE_ACTION_T a) {
     return push(&(normalQueue[currentPushQueue]), a);
 }
 
@@ -77,7 +77,7 @@ BOOL pushAction(ACTION_T a) {
  *
  * @return the action
  */
-ACTION_T getAction(BYTE q) {
+COMPUTE_ACTION_T getAction(BYTE q) {
 	return peekActionQueue(q, 0);
 }
 
@@ -86,7 +86,7 @@ ACTION_T getAction(BYTE q) {
  *
  * @return the next action
  */
-ACTION_T popAction(BYTE q) {
+COMPUTE_ACTION_T popAction(BYTE q) {
     return pop(&(normalQueue[q]));
 }
 
@@ -105,7 +105,7 @@ void doneAction(BYTE q) {
  * @param index the item index within the queue
  * @return the Action or NO_ACTION 
  */
-ACTION_T peekActionQueue(BYTE q, unsigned char index) {
+COMPUTE_ACTION_T peekActionQueue(BYTE q, unsigned char index) {
     if (index < quantity(&(normalQueue[q]))) {
         return peek(&(normalQueue[q]), index);
     }

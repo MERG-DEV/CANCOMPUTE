@@ -261,7 +261,7 @@ public class GridConnectNvVisitor implements ComputeGrammarVisitor {
 			if (ev > 0) {
 				doNv(nvIndex++, ev, "Event number");
 			} else {
-				
+				System.err.println("Error - unknown event "+ei.getName());
 			}
 			return null;
 		}

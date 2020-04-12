@@ -68,8 +68,8 @@ extern "C" {
     // set to 0 for LP. Set to 0xFF for HP
 #define CAN_INTERRUPT_PRIORITY 0    // all low priority
      
-#define CONSUMER_ACTION_T   unsigned char
-#define PRODUCER_ACTION_T	unsigned char
+#define ACTION_T   unsigned char
+#define HAPPENING_T	unsigned char
     
 #include "computeNv.h"
 #include "computeEEPROM.h"
@@ -81,7 +81,7 @@ extern "C" {
 typedef struct {
     BYTE op : 2;
     BYTE arg : 6;
-} ACTION_T;
+} COMPUTE_ACTION_T;
 
 
 #include "computeEvents.h"

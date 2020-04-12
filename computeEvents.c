@@ -111,7 +111,7 @@ void processEvent(BYTE tableIndex, BYTE * msg) {
 }
 
 // No default events
-BOOL getDefaultProducedEvent(PRODUCER_ACTION_T paction) {
+BOOL getDefaultProducedEvent(HAPPENING_T paction) {
     return FALSE;
 }
 
@@ -230,7 +230,8 @@ BYTE sequenceMulti(BYTE num, BYTE nvIndex) {
     BYTE bi;
     BYTE ret = 0;
     BYTE i;
-    BYTE nvi = nvIndex;
+    BYTE nvi;
+    BYTE nv;
     
     if (bufferIndex == 0) {
         bi = NUM_BUFFERS;
@@ -238,13 +239,13 @@ BYTE sequenceMulti(BYTE num, BYTE nvIndex) {
         bi = bufferIndex - 1;
     }
     if (num == 0) return TRUE;
- 
+    nvi = nvIndex + num -1;
     for (i=0; i<NUM_BUFFERS; i++) {
         
-        if ((globalTimeStamp - rxBuffers[bi].time) > timeLimit) break;  // didn't find all in time
-        
-        if (rxBuffers[bi].eventNoAndOnOff == getNv(nvi)) {  // found next event
-            nvi++;
+        if ((globalTimeStamp - rxBuffers[bi].time) > timeLimit) break;  // didn't find all in time window
+        nv = getNv(nvi);
+        if (rxBuffers[bi].eventNoAndOnOff == nv) {  // found next event
+            nvi--;
             num--;
             if (num == 0) return TRUE;    // reached end 
         }
