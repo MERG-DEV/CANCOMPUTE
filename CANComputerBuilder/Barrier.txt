@@ -1,0 +1,51 @@
+# BARRIER CONTROL
+# ===============
+# Version T4-1: added use of the 'Not allowed' button to prevent setting the LEDs and Flags when it is true.
+# Version T4-0: First version.
+
+# This Test version is to establish the idea that the $AnyYelBtn & $AnyGrnBtn flags and the $YMH & $GMH flags are set and cleared...
+# ...  when the script is running. They are indicated by LEDs on module 41-CANPAN:
+# LED1=$AnyYelBtn; LED3=$YMH (flash); LED9=$AnyGrnBtn; LED11=$GMH (flash). (Numbers are TM7 ID's)
+# Note: this version does NOT remember that a Manor Halt button had been previously pressed, and a DMU was stopped there.
+define $LED1 = NN:0 EN:731;
+define $LED3 = NN:0 EN:732;
+define $LED9 = NN:0 EN:733;
+define $LED11 = NN:0 EN:734;
+# Flags:
+define $AnyYelBtn = NN:0 EN:298;
+define $AnyGrnBtn = NN:0 EN:299;
+define $YMH = NN:0 EN:296;
+define $GMH = NN:0 EN:297;
+
+# PUSH BUTTONS:-
+# Manor Halt - Yel & Grn:
+define $MY = NN:0 EN:205;
+define $MG = NN:0 EN:206;
+# Platform West - Yel & Grn:
+define $WY = NN:0 EN:207;
+define $WG = NN:0 EN:201;
+# Platform East - Yel & Grn:
+define $EY = NN:0 EN:208;
+define $EG = NN:0 EN:202;
+# North Spur - Yel & Grn:
+define $NY = NN:0 EN:203;
+define $NG = NN:0 EN:209;
+# South Spur - Yel & Grn:
+define $SY = NN:0 EN:204;
+define $SG = NN:0 EN:211;
+# ReadyToGo Indicator:
+define $RTG = NN:0 EN:420;
+# Not allowed Indicator:
+define $XBtn = NN:0 EN:500;
+
+# Any Yellow Push button pressed:
+when state($Btn) is off and (state($MY) is on or state($WY) is on or state($EY) is on or state($NY) is on or state($SY) is on) within 0s send on$AnyYelBtn, send on$LED1;
+# Any Green Push button pressed:
+when state($Btn) is off and (state($MG) is on or state($WG) is on or state($EG) is on or state($NG) is on or state($SG) is on) within 0s send on$AnyGrnBtn, send on$LED9;
+# Yellow Manor Halt button pressed:
+when state($MY) is on within 0s send on$LED3;
+# Green Manor Halt button pressed:
+when state($MG) is on within 0s send on$LED11;
+
+# Clear flags and LEDs when the Ready-to-Go LED is lit (which indicates that all Buttons are released).
+when state($RTG) is on within 0s send off$AnyYelBtn, send off$AnyGrnBtn, send off$LED1, send off$LED9, send off$LED3, send off$LED11;

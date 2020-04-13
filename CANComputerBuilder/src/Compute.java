@@ -35,7 +35,7 @@ public class Compute {
 		InputStream is = null;
 		OutputFormat outputFormat = OutputFormat.TEXT;
 		
-	    System.out.println("Rule Compiler v4 for rule format v2");
+	    System.out.println("Rule Compiler v5 for rule format v2");
 		
 		if (args.length > 0) {
 			for (int i=0; i<args.length; i++) {
