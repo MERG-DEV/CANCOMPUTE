@@ -263,7 +263,7 @@ public class fcuNvVisitor implements ComputeGrammarVisitor {
 			if (ev > 0) {
 				doNv(nvIndex++, ev, "Event number");
 			} else {
-				
+				System.out.println("Error: undefined variable \""+ei.getName()+"\"");
 			}
 			return null;
 		}

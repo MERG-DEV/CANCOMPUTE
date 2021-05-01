@@ -20,3 +20,32 @@ This work is licensed under the:
     No additional restrictions : You may not apply legal terms or technological measures that
                                   legally restrict others from doing anything the license permits.
    ** For commercial use, please contact the original copyright holder(s) to agree licensing terms
+
+The actual CBUSlib files needed by the project are:
+  * CBUSlib header files
+    - callbacks.h
+    - can18.h
+    - cbus.h
+    - cbuslib.h
+    - devincs.h
+    - EEPROM.h
+    - events.h
+    - FliM.h
+    - MoreTypes.h
+    - romops.h
+    - StatusLeds.h
+    - TickTime.h
+  * CBUSlib source files
+    - Bootloader.asm
+    - c018.c
+    - can18.c
+    - cbus.c
+    - events.c
+    - FliM.c
+    - romops.c
+    - StatusLeds.c
+    - ticktime.c
+  * CBUSdefs header files
+    - cbusdefs.h
+
+You will also need to ensure you are using the correct linker script from this repo depending upon target processor type. 
