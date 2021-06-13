@@ -76,7 +76,7 @@ extern void computeEventsInit(void);
 #define EVENT_TABLE_WIDTH       1         // Width of eventTable
 #define EVperEVT                1         // Max number of EVs per event
 
-#define AT_EVENTS               (AT_NV - 0x2BC)      //(AT_NV - sizeof(EventTable)*NUM_EVENTS) Size=NUM_EVENTS * 7 = 700(0x2BC) bytes
+#define AT_EVENTS               (AT_NV - NUM_EVENTS*7)      //(AT_NV - sizeof(EventTable)*NUM_EVENTS) Size=NUM_EVENTS * 7 = 700(0x2BC) bytes
 
 
 // We'll also be using configurable produced events

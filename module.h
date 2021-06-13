@@ -74,6 +74,9 @@ extern "C" {
 #include "computeNv.h"
 #include "computeEEPROM.h"
 #include "rules.h"
+
+/* callback definitions from CBUSlib back into the application */
+#define APP_addEvent addEvent   // No need for adding EV callback
     
 /*
  * EVENTS

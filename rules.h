@@ -3,7 +3,7 @@
 
 #include "GenericTypeDefs.h"
 
-#define NUM_EXPRESSIONS 100
+#define NUM_EXPRESSIONS 200
 #define NUM_RULES       50
 
 typedef enum {
@@ -92,12 +92,21 @@ extern BYTE nvPtr;
 extern void runRules(void);
 extern void ruleInit(void);
 
-// Sizes: 
-// Rules        4*NUM_RULES = 200 = 0x96
-// Expressions  3*NUM_EXPRESSIONS = 300 = 0x12c
-// Operands     3*NUM_OPERANDS = 600 = 0x258
-#define AT_RULES            ((BYTE*)(AT_EVENTS - 200))
-#define AT_EXPRESSIONS      ((BYTE*)(AT_RULES - 300))
+/*
+ * Flash Memory Map:
+ * 
+ * 0x7F00 - 0x7FFF NVs             (size=256 0x100)    255 NVs
+ * 0x7C44 - 0x7EFF Events          (size=700 0x2BC)    100 events of 1EV
+ * 0x7B7C - 0x7C43 Rules           (size=200 0xC8)     50 rules
+ * 0x7604 - 0x7B7B Expressions     (size=1400 0x578)    200 expressions
+ * 0x7603 - 0x7603 ruleIndex       (size=1)
+ * 0x7602 - 0x7602 expressionIndex (size=1)
+ * 0x7601 - 0x7601 ruleState       (size=1)
+ * 0x7600 - 0x7600 nvPtr           (size=1)
+ */
+
+#define AT_RULES            ((BYTE*)(AT_EVENTS - NUM_RULES*4))
+#define AT_EXPRESSIONS      ((BYTE*)(AT_RULES - NUM_EXPRESSIONS*7))
 
 #define AT_RULEINDEX        ((BYTE*)(AT_EXPRESSIONS - 1))
 #define AT_EXPRESSIONINDEX  ((BYTE*)(AT_RULEINDEX -1))

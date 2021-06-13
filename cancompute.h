@@ -57,10 +57,10 @@ extern "C" {
  */ 
 #define MAJOR_VER 	2
 #define MINOR_VER 	'a'        // Minor version character
-#define BETA        4
+#define BETA        5
     
 #include "GenericTypeDefs.h"
-#include "cbusdefs8r.h"
+#include "cbusdefs.h"
 
 #define MANU_ID         MANU_MERG
 #define MODULE_ID       MTYP_CANCOMPUTE

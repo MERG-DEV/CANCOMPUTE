@@ -125,7 +125,7 @@ BOOL receivedEvent(BYTE eventNoAndState) {
     BYTE i;
     
     if (bufferIndex == 0) {
-        bi = NUM_BUFFERS;
+        bi = NUM_BUFFERS-1;
     } else {
         bi = bufferIndex - 1;
     }
@@ -137,7 +137,7 @@ BOOL receivedEvent(BYTE eventNoAndState) {
             return TRUE;
         }
         if (bi == 0) {
-            bi = NUM_BUFFERS;
+            bi = NUM_BUFFERS-1;
         } else {
             bi--;
         }
@@ -156,7 +156,7 @@ BYTE countEvent(BYTE eventNoAndState) {
     BYTE i;
     
     if (bufferIndex == 0) {
-        bi = NUM_BUFFERS;
+        bi = NUM_BUFFERS-1;
     } else {
         bi = bufferIndex - 1;
     }
@@ -169,7 +169,7 @@ BYTE countEvent(BYTE eventNoAndState) {
             if (ret == 255) return ret;
         }
         if (bi == 0) {
-            bi = NUM_BUFFERS;
+            bi = NUM_BUFFERS-1;
         } else {
             bi--;
         }
@@ -189,7 +189,7 @@ BYTE sequence2 (BYTE event1AndState, BYTE event2AndState) {
     BYTE i;
     
     if (bufferIndex == 0) {
-        bi = NUM_BUFFERS;
+        bi = NUM_BUFFERS-1;
     } else {
         bi = bufferIndex - 1;
     }
@@ -203,7 +203,7 @@ BYTE sequence2 (BYTE event1AndState, BYTE event2AndState) {
                     return TRUE;
                 }
                 if (bi == 0) {
-                    bi = NUM_BUFFERS;
+                    bi = NUM_BUFFERS-1;
                 } else {
                     bi--;
                 }
@@ -211,7 +211,7 @@ BYTE sequence2 (BYTE event1AndState, BYTE event2AndState) {
             return FALSE;
         }
         if (bi == 0) {
-            bi = NUM_BUFFERS;
+            bi = NUM_BUFFERS-1;
         } else {
             bi--;
         }
@@ -234,7 +234,7 @@ BYTE sequenceMulti(BYTE num, BYTE nvIndex) {
     BYTE nv;
     
     if (bufferIndex == 0) {
-        bi = NUM_BUFFERS;
+        bi = NUM_BUFFERS-1;
     } else {
         bi = bufferIndex - 1;
     }
@@ -250,7 +250,7 @@ BYTE sequenceMulti(BYTE num, BYTE nvIndex) {
             if (num == 0) return TRUE;    // reached end 
         }
         if (bi == 0) {
-            bi = NUM_BUFFERS;
+            bi = NUM_BUFFERS-1;
         } else {
             bi--;
         }
