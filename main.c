@@ -60,11 +60,13 @@
  * NVs              256     1       0x0100      Flash     0x7F00 - 0x7FFF
  * Events           100     7       0x02BC      Flash     0x7C44 - 0x7EFF
  * Rules            50      4       0x00C8      Flash     0x7B7C - 0x7C43
- * Expressions      100     3       0x012C      Flash     0x7A50 - 0x7B7B
- * RuleIndex        1       1       0x0001      Flash     0x7A4F - 0x7A4F
- * ExpressionIndex  1       1       0x0001      Flash     0x7A4E - 0x7A4E
- * ruleState        1       1       0x0001      Flash     0x7A4D - 0x7A4D
- * NvPtr            1       1       0x0001      Flash     0x7A4C - 0x7A4C
+ * Expressions      200     3       0x0258      Flash     0x7604 - 0x7B7B
+ * RuleIndex        1       1       0x0001      Flash     0x7603 - 0x7603
+ * ExpressionIndex  1       1       0x0001      Flash     0x7602 - 0x7602
+ * ruleState        1       1       0x0001      Flash     0x7601 - 0x7601
+ * NvPtr            1       1       0x0001      Flash     0x7600 - 0x7600
+ * 
+ * RAM is also use for the buffers
  * Rxbuf            200     4       800         RAM
  */
 
@@ -88,6 +90,7 @@
 #include "cbus.h"
 #include "actionQueue.h"
 #include "computeActions.h"
+#include "rules.h"
 
 extern void initOutputs(void);
 extern void processOutputs(void);
@@ -275,6 +278,7 @@ void initialise(void) {
     // RB bits 0,1,4,5 need pullups
     WPUB = 0x33;
     ruleInit();
+    computeEventsInit();
     // The init routine doesn't initialise the values
     NO_ACTION.op = ACTION_OPCODE_NOP;
     NO_ACTION.arg = 0;

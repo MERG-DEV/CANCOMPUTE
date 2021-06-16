@@ -92,6 +92,8 @@ void actUponNVchange(unsigned char index, unsigned char oldValue, unsigned char 
         load();
         // send message to indicate the result
         doArdat();
+        // reset the state and empty the rx buffer
+        computeEventsInit();
     }
 }
 

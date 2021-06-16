@@ -23,12 +23,6 @@ BYTE nvPtr;             // index into NVs whilst parsing the rules
 BYTE timeLimit;
 static BOOL results[NUM_RULES]; // remeber the previous result of the expression
                                 // so we can see then it changes
-
-rom BYTE romRuleIndex;
-rom BYTE romExpressionIndex;
-rom RuleState romRuleState;
-rom BYTE romNvPtr;
-
 #define TOO_MANY        0xFF
 
 // Forward declarations
