@@ -51,7 +51,8 @@ extern "C" {
 #include "GenericTypeDefs.h"
 #include "cancompute.h"
 
-#define FLASH_VERSION   0x01
+//#define FLASH_VERSION   0x01
+#define FLASH_VERSION   0x02    // updated when number of Expressions increased from 100 to 200
     
 // Global NVs
 #define NV_VERSION                      0

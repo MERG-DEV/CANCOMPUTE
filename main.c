@@ -30,7 +30,7 @@
  * File:   main.c
  * Author: Ian Hogg
  * 
- * This is the main for the Configurable CANMIO module.
+ * This is the main for the CANCOMPTE module.
  * 
  * Timer usage:
  * TMR0 used in ticktime for symbol times. 
@@ -71,7 +71,7 @@
  */
 
 /**
- *	The Main CANMIO program supporting configurable I/O.
+ *	The Main CANCOMPUTE program supporting configurable I/O.
  */
 
 #include "devincs.h"
@@ -92,9 +92,6 @@
 #include "computeActions.h"
 #include "rules.h"
 
-extern void initOutputs(void);
-extern void processOutputs(void);
-
 #ifdef NV_CACHE
 #include "nvCache.h"
 #endif
@@ -104,22 +101,18 @@ void ISRLow(void);
 void ISRHigh(void);
 #endif
 
-// Default type is INPUT
-#ifndef TYPE_DEFAULT
-#define TYPE_DEFAULT    TYPE_INPUT
-#endif
-
 // forward declarations
 void __init(void);
 BOOL checkCBUS( void);
 void ISRHigh(void);
 void initialise(void);
-void configIO(unsigned char io);
 void factoryReset(void);
 void factoryResetGlobalNv(void);
 BOOL sendProducedEvent(unsigned char action, BOOL on);
 void factoryResetEE(void);
 void factoryResetFlash(void);
+
+extern void load(void);
 
 #ifdef __18CXX
 void high_irq_errata_fix(void);
@@ -262,10 +255,19 @@ void initialise(void) {
 #endif
     }
     // check if FLASH is valid
-   if (getNv(NV_VERSION) != FLASH_VERSION) {
-        // may need to upgrade of data in the future
-        // set Flash to default values
-        factoryResetFlash();
+    if (getNv(NV_VERSION) != FLASH_VERSION) {
+        if (getNv(NV_VERSION) == 1) {
+            /* upgrade from version 1 to version 2 */
+            /* NUM_EXPRESSIONS changed from 100 to 200. This also pushed the
+             * statistics down in memory. Fortunately the NVs and events are not affected.
+             * To fix this we can just reload the rules and expressions from NVs.
+             */
+            load();  // just reload
+            computeEventsInit();
+        } else {
+            // set Flash to default values
+            factoryResetFlash();
+        }
         // set the version number to indicate it has been initialised
         writeFlashByte((BYTE*)(AT_NV + NV_VERSION), (BYTE)FLASH_VERSION);
 #ifdef NV_CACHE
