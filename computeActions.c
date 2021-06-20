@@ -6,10 +6,13 @@
 // forward declarations
 void doWait(BYTE q, unsigned int duration);
 
-static TickValue startWait;
+static TickValue startWait[NUM_ACTION_QUEUES];
 
 void initActions(void) {
-    startWait.Val = 0;
+    unsigned char q;
+    for (q=0; q<NUM_ACTION_QUEUES; q++) {
+        startWait[q].Val = 0;
+    }
 }
 
 /**
@@ -51,14 +54,14 @@ void processActions(void) {
  */
 void doWait(BYTE q, unsigned int duration) {
     // start the timer
-    if (startWait.Val == 0) {
-        startWait.Val = tickGet();
+    if (startWait[q].Val == 0) {
+        startWait[q].Val = tickGet();
         return;
     } else {
         // check if timer expired
-        if ((tickTimeSince(startWait) > ((long)duration * (long)HUNDRED_MILI_SECOND))) {
+        if ((tickTimeSince(startWait[q]) > ((long)duration * (long)HUNDRED_MILI_SECOND))) {
             doneAction(q);
-            startWait.Val = 0;
+            startWait[q].Val = 0;
             return;
         } 
     }

@@ -131,6 +131,7 @@ void load(void) {
         BYTE i;
 		BYTE nv = getNv(nvPtr++);
         BYTE r;
+        BYTE e;
 		
 		if ((OpCodes)nv >= END) {
 			break;
@@ -143,7 +144,14 @@ void load(void) {
 		if (r < 0) {ruleState = TOO_MANY_RULES; break;}
 		writeFlashByte((BYTE*)(&(rules[r].within)), getNv(nvPtr++));    // the time limit
     	writeFlashByte((BYTE*)(&(rules[r].expression)), newExpression());   // allocate an Expression structure
-        loadExpression(readFlashBlock(&rules[r].expression));   // Load the expression from NVs
+        e = newExpression();
+        if (e == TOO_MANY) {
+            ruleIndex--;
+            ruleState=TOO_MANY_EXPRESSIONS;
+            break;
+        }
+        writeFlashByte((BYTE*)(&(rules[r].expression)), e);   // allocate an Expression structure
+        loadExpression(e);                                    // Load the expression from NVs
         if (ruleState != VALID) break;
         writeFlashByte((BYTE*)(&(rules[r].actions)), nvPtr);   // point to the actions in the NVs
 		skipActions();

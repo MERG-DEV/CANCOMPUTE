@@ -43,7 +43,7 @@
 
 //BYTE normalReadIdx[NUM_ACTION_QUEUES];                   // index of the next to read
 //BYTE normalWriteIdx[NUM_ACTION_QUEUES];                  // index of the next to write
-COMPUTE_ACTION_T normalQueueBuf[ACTION_QUEUE_SIZE][NUM_ACTION_QUEUES];   // the actual cyclic buffer space
+COMPUTE_ACTION_T normalQueueBuf[NUM_ACTION_QUEUES][ACTION_QUEUE_SIZE];   // the actual cyclic buffer space
 Queue normalQueue[NUM_ACTION_QUEUES];
 static BYTE currentPushQueue;
 
