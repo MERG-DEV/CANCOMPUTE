@@ -127,7 +127,7 @@ void load(void) {
 	expressionIndex = 0;
 	nvPtr = 1;
 		
-	while (1) {
+	while (ruleState == VALID) {
         BYTE i;
 		BYTE nv = getNv(nvPtr++);
         BYTE r;
@@ -155,6 +155,7 @@ void load(void) {
         if (ruleState != VALID) break;
         writeFlashByte((BYTE*)(&(rules[r].actions)), nvPtr);   // point to the actions in the NVs
 		skipActions();
+        if (ruleState != VALID) break;
         nv = getNv(nvPtr);
         if (nv == THEN) {
             nvPtr++;
@@ -224,14 +225,16 @@ void loadExpression(BYTE expression) {
             // One event with on/off state
             val = getNv(nvPtr++);
             writeFlashByte((BYTE*)(&(expressions[expression].op1.eventNo)), val);
-            if (EVENT_NO(val) > (NUM_EVENTS -1)) {ruleState = INVALID_EVENT; return;}
+            if (val == 0) {ruleState = INVALID_EVENT; return;}
+            if (EVENT_NO(val) > (NUM_EVENTS)) {ruleState = INVALID_EVENT; return;}
             break;
         case STATE_ON:
         case STATE_OFF:
             // One event WITHOUT on/off state
             val = getNv(nvPtr++);
             writeFlashByte((BYTE*)(&(expressions[expression].op1.eventNo)), val);
-            if (val > (NUM_EVENTS -1)) {ruleState = INVALID_EVENT; return;}
+            if (val == 0) {ruleState = INVALID_EVENT; return;}
+            if (val > (NUM_EVENTS)) {ruleState = INVALID_EVENT; return;}
             break;
         case INTEGER:
             // One integer
@@ -282,14 +285,29 @@ void loadExpression(BYTE expression) {
  * would be reparsed so I'm not going to worry about this. 
  */
 void skipActions(void) {
-    BYTE ai = 0;
+    BYTE aop = 0;
+    BYTE evt;
     
     while (1) {
-        ai = getNv(nvPtr++);
-        switch (ai) {
+        // get the OPCODE
+        aop = getNv(nvPtr++);
+        
+        switch (aop) {
             case SEND:
+                // get the argument
+                evt = getNv(nvPtr++);
+                if (evt & 0x40) { // evt needs to have bit 6 clear so it will fit into ActionQueue
+                    ruleState = ARGUMENT_TOO_LARGE; 
+                    return;
+                }
+                break;
             case DELAY:
-                nvPtr++;    // skip the OPCODE's argument
+                // get the argument
+                evt = getNv(nvPtr++);
+                if (evt > 0x3F) { // evt needs to be only 6 bits so it will fit into ActionQueue
+                    ruleState = ARGUMENT_TOO_LARGE; 
+                    return;
+                }
                 break;
             default:
                 nvPtr--;    // move back so that we leave pointer at next instruction

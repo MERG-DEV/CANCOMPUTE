@@ -81,7 +81,8 @@ typedef enum  {
     TOO_MANY_ACTIONS        =4,
     UNKNOWN_INSTRUCTION     =5,
     UNKNOWN_ACTION          =6,
-    INVALID_EVENT           =7
+    INVALID_EVENT           =7,
+    ARGUMENT_TOO_LARGE      =8
 } RuleState;
 
 extern BYTE ruleIndex;

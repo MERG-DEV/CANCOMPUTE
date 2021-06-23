@@ -200,6 +200,7 @@ int main(void) @0x800 {
 #endif
     // Both LEDs off to start with during initialisation
     initStatusLeds();
+    TRIS_BLUE_LED = 0;
 
     startTime.Val = tickGet();
     lastRulesPollTime.Val = startTime.Val;
