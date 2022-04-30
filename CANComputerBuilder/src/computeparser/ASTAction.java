@@ -6,11 +6,21 @@ public
 class ASTAction extends SimpleNode {
   public enum OpCodes {
 		SEND,
-		DELAY
+		DELAY,
+		CBUS
   };
   
   private OpCodes opCode;
+  private String cbusMessage;
   
+  public String getCbusMessage() {
+	return cbusMessage;
+  }
+
+  public void setCbusMessage(String cbusMessage) {
+	this.cbusMessage = cbusMessage;
+  }
+
   public ASTAction(int id) {
     super(id);
   }

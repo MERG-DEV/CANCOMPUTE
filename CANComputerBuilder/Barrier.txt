@@ -36,7 +36,7 @@ define $SG = NN:0 EN:211;
 # ReadyToGo Indicator:
 define $RTG = NN:0 EN:420;
 # Not allowed Indicator:
-define $XBtn = NN:0 EN:500;
+define $Btn = NN:0 EN:500;
 
 # Any Yellow Push button pressed:
 when state($Btn) is off and (state($MY) is on or state($WY) is on or state($EY) is on or state($NY) is on or state($SY) is on) within 0s send on$AnyYelBtn, send on$LED1;

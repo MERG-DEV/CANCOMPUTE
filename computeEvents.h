@@ -72,7 +72,7 @@ extern void computeEventsInit(void);
 #define HASH_LENGTH     32
 #define CHAIN_LENGTH    20
 
-#define NUM_EVENTS              100       // must be less than 256 otherwise loops fail. These will have EV#1 with 0..99
+#define NUM_EVENTS              100U       // must be less than 256 otherwise loops fail. These will have EV#1 with 0..99
 #define EVENT_TABLE_WIDTH       1         // Width of eventTable
 #define EVperEVT                1         // Max number of EVs per event
 
@@ -92,10 +92,17 @@ extern void processActions(void);
 extern BYTE findEventByEV1(BYTE ev);
 extern BYTE countEvent(BYTE eventNo);
 extern BOOL receivedEvent(BYTE eventNo);
-extern void doArdat(void);
+extern void doAcdat(void);
 extern BYTE sequence2(BYTE event1, BYTE event2);
 extern BYTE sequenceMulti(BYTE num, BYTE nvIndex);
-extern BYTE currentEventState[NUM_EVENTS];
+
+typedef enum {
+    EVENT_STATE_UNKNOWN = 2,
+    EVENT_STATE_ON      = 1,
+    EVENT_STATE_OFF     = 0 
+} EventState;
+extern EventState currentEventState[NUM_EVENTS];
+
 
 typedef struct {
     BYTE eventNoAndOnOff;

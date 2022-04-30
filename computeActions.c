@@ -2,9 +2,11 @@
 #include "computeEvents.h"
 #include "actionQueue.h"
 #include "computeActions.h"
+#include "cbus.h"
 
 // forward declarations
 void doWait(BYTE q, unsigned int duration);
+void sendCBUS(BYTE nVoffset);
 
 static TickValue startWait[NUM_ACTION_QUEUES];
 
@@ -44,6 +46,10 @@ void processActions(void) {
             doneAction(q);
             continue;
         }
+        if (action.op == ACTION_OPCODE_SEND_CBUS) {
+            sendCBUS(action.arg);   // arg is the NV offset pointing to OPC
+            doneAction(q);
+        }
     }
 }
 
@@ -65,4 +71,24 @@ void doWait(BYTE q, unsigned int duration) {
             return;
         } 
     }
+}
+
+
+/**
+ * Send a CBUS message. 
+ * @parmam nVoffset is the offset into NVs which contains the CBUS OPC and subsequent
+ * data bytes.
+ */
+void sendCBUS(BYTE nVoffset) {
+    BYTE msg[d0+4];
+    BYTE i;
+    BYTE len;
+    msg[d0] = getNv(nVoffset);    // OPC
+    // work out how many subsequent bytes
+    len = (msg[d0] >> 5U);
+    for (i = 1; i<=len; i++) {
+        msg[d0+i] = getNv(nVoffset + i);
+    }
+    
+    cbusSendMsg(CBUS_OVER_CAN, msg);
 }

@@ -66,10 +66,15 @@ extern "C" {
 typedef struct {
         BYTE nv_version;                // version of NV structure
         BYTE nv_rules[254];              // The NVs where the rules are stores
-        BYTE hbDelay;                    // Interval in 100mS for automatic heartbeat. Set to zero for no heartbeat.
+        BYTE sodDelay;                    // Interval in 100mS for automatic heartbeat. Set to zero for no heartbeat.
 } ModuleNvDefs;
 
 #define NV_NUM  255     // Number of node variables
+
+// Options
+#define EVENT_UNKNOWN_OPTION    1
+
+
 #ifdef __18F25K80
 #define AT_NV   (0x8000 - ((NV_NUM)+1))        // Where the NVs are stored. (_ROMSIZE - 256)  Size=256 bytes
 #endif

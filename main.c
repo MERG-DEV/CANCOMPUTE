@@ -38,18 +38,36 @@
  * Created on 10 April 2017, 10:26
  */
 /** TODOs
- * * Work out if we need the event hash
- * * writing NVs may not be reliable
- * * Very first event sent out seems to disappear. It is put into ECAN tx buffer but never comes out.
- * * Support when <event> within ... i.e. allow event to be used as a boolean
- * * Handle the within <time> timeout clause
+ * * Support when <event> within ... i.e. allow event to be used as a boolean.
+ * * Test RB0/RB1 inputs
  * 
- * DONES:
+ * History:
+ * April 2022
+ * * Added CBUS to send any CBUS message
+ * * RQDAT request - respond with Event state and Rule state
+ * * currentEventState start with UNKNOWN
+ * * Fix for Expression allocation
+ * 
+ * June 2021
+ * * Add more checking for running out of Rules and Expressions
+ * * Flash version 2
+ * * Use CBUSlib 2L
+ * 
+ * April 2020
+ * * Fix for Sequence operator
+ * 
+ * Dec 2019
+ * * Fix for delay
+ * * Fix for events wrong way around
+ * 
+ * Sep 2018
+ * * Fix for Received
+ * * Fix for Delay
  * * Move rules, expressions, operands, actions to Flash
  * * Run rules expression regularly, 
  * * Store result of rule expression so can detect changes
  * * Execute actions on result of expression
- * * Handle ARDAT
+ * * Handle ACDAT to provide feedback about load
  * * receive to check times
  * * Multiple actionQueues
  * 
@@ -71,7 +89,59 @@
  */
 
 /**
- *	The Main CANCOMPUTE program supporting configurable I/O.
+ *	The Main CANCOMPUTE program.
+ * 
+ * An explanation of how it works.
+ * 
+ * Events received are checked to see if they are ones of interest i.e. have been 
+ * defined in the rules file.
+ * If they are then they are added to the received event log with a timestamp and 
+ * also currentEventState is updated,see computeEvents.c processEvent().
+ * 
+ * The rules have multiple stages of processing. As the NVs are written when the END
+ * Opcode is written then the rules are "loaded". See computeNv.c actUponNVchange().
+ * 
+ * The loading is done in rules.c load(). This goes through the NVs and for each rule
+ * allocates a rule object in Flash and fills in the details of the within time, 
+ * the expression and the do actions and the then actions. The expression is 
+ * stored as the index into the expression array and the actions are stores as 
+ * indexes into the NVs. This involves recursively loading the expression into 
+ * the expression objects in Flash (rules.c loadExpression()) and skipping over 
+ * the Action NVs (rules.c skipActions()) so that we loop through all the rules.
+ * 
+ * The Expressions are loaded into a tree structure of Expression objects by
+ * rule.c loadExpression(). The expression object has a type and one or two other
+ * arguments which may be "pointers" to other Expression objects (actually 
+ * indices into the Expression Object array) or to Event numbers or integer 
+ * values.
+ * 
+ * After loading an ACDAT is sent with the results of the loading process.
+ * 
+ * Main.c main() calls rules.c runRules() every 100ms. This loops through all 
+ * the rules and calls execute(), evaluate() would have been a better name 
+ * since this function evaluates the result of the rule's expression. If there
+ * has been a change in the result of the expression then either the normal 
+ * actions are "done" or the THEN actions are "done".
+ * 
+ * The "doing" of the rule's actions involves going through the NVs indexed by 
+ * the rule and transferring the Actions to the one of the module's ActionQueues.
+ * See rules.c doActions(). The Actions consist of an Opcode and an argument.
+ * 
+ * The set of actions for each rule are added to a 
+ * single ActionQueue, this ensures they are processed in sequence. Actions for 
+ * other queues will (may) be put onto a different ActionQueue so that they
+ * may be processed simultaneously.
+ * 
+ * The processing of Actions is done from main.c main() by calling 
+ * computeActions.c processActions().
+ * 
+ * The Rules and Expression Object array sizes have been carefully tuned to be
+ * just sufficient for the number of NVs. There isn't any concern about 
+ * increasing these sizes as there is sufficient Flash available - even more 
+ * if the PIC18F26K0 is used. However the receive event buffer and the action 
+ * queues should then also be increased but these are limited by the RAM 
+ * available in the PICs.
+ * 
  */
 
 #include "devincs.h"
@@ -91,6 +161,7 @@
 #include "actionQueue.h"
 #include "computeActions.h"
 #include "rules.h"
+#include "timedResponse.h"
 
 #ifdef NV_CACHE
 #include "nvCache.h"
@@ -111,6 +182,8 @@ void factoryResetGlobalNv(void);
 BOOL sendProducedEvent(unsigned char action, BOOL on);
 void factoryResetEE(void);
 void factoryResetFlash(void);
+void myTimedResponse(void);
+void doRqdat(void);
 
 extern void load(void);
 
@@ -170,6 +243,11 @@ static TickValue   lastRulesPollTime;
 /* This is used to stamp event times and to do the "within" comparisons */
 WORD globalTimeStamp;
 
+static TickValue   lastTimedResponseTime;
+#define TIMED_RESPONSE_RQDAT_EVENTS     1
+#define TIMED_RESPONSE_RQDAT_RULES      2
+extern BOOL results[NUM_RULES];
+
 #ifdef BOOTLOADER_PRESENT
 // ensure that the bootflag is zeroed
 #pragma romdata BOOTFLAG
@@ -205,6 +283,8 @@ int main(void) @0x800 {
     startTime.Val = tickGet();
     lastRulesPollTime.Val = startTime.Val;
 //    lastRulePollTime.Val = startTime.Val;
+    lastTimedResponseTime.Val = startTime.Val;
+
     globalTimeStamp = 0;
     
     initialise(); 
@@ -227,6 +307,10 @@ int main(void) @0x800 {
                 lastRulesPollTime.Val = tickGet();
                 processActions();
             }
+        }
+        if (tickTimeSince(lastTimedResponseTime) > (unsigned long)(10 * ONE_MILI_SECOND)) {
+            myTimedResponse();
+            lastTimedResponseTime.Val = tickGet();
         }
         // Check for any flashing status LEDs
         checkFlashing();
@@ -280,7 +364,7 @@ void initialise(void) {
     INTCON2bits.RBPU = 0;
     // RB bits 0,1,4,5 need pullups
     WPUB = 0x33;
-    ruleInit();
+    
     computeEventsInit();
     // The init routine doesn't initialise the values
     NO_ACTION.op = ACTION_OPCODE_NOP;
@@ -289,7 +373,7 @@ void initialise(void) {
     initActions();
     computeEventsInit();
     computeFlimInit(); // This will call FLiMinit, which, in turn, calls eventsInit, cbusInit
-
+    ruleInit();
     // default to all digital IO
     ANCON0 = 0x00;
     ANCON1 = 0x00; 
@@ -301,6 +385,8 @@ void initialise(void) {
     
     // Enable interrupt priority
     RCONbits.IPEN = 1;
+    
+    initTimedResponse();
     // enable interrupts, all init now done
     ei(); 
 }
@@ -365,13 +451,109 @@ BOOL checkCBUS( void ) {
                 // if we just call main then the stack won't be reset and we'd also want variables to be nullified
                 // instead call the RESET vector (0x0000)
                 Reset();
- /*           case OPC_ARDAT:
-                doArdat();
-                return TRUE;*/
+            case OPC_RQDAT:
+                doRqdat();
+                return TRUE;
             }
         }
     }
     return FALSE;
+}
+
+/**
+ * Timed Response handline
+ */
+unsigned char timedResponse;
+unsigned char timedResponseStep;
+
+extern BOOL sendProducedEvent(HAPPENING_T happening, BOOL on);
+
+/**
+ * Initialise the timedResponse functionality.
+ */
+void initTimedResponse(void) {
+    timedResponse = TIMED_RESPONSE_NONE;
+}
+/**
+ * Send one response CBUS message and increment the step counter ready for the next call.
+ */
+void myTimedResponse(void) {
+    EventState eventState;
+    
+    switch (timedResponse) {
+        case TIMED_RESPONSE_RQDAT_EVENTS:
+            // first do the events by sending currentEventState[NUM_EVENTS]
+            // then do the rules by sending ruleState[NUM_RULES]
+            
+            // The step is used to index through the event table
+            if (timedResponseStep >= NUM_EVENTS) {  // finished?
+                timedResponse = TIMED_RESPONSE_RQDAT_RULES;
+                timedResponseStep = 0;
+                return;
+            }
+            eventState = currentEventState[timedResponseStep];
+            if ((eventState == EVENT_STATE_ON) || (eventState == EVENT_STATE_OFF)) {
+                /**
+                 * Request to get event status data from this module.
+                 * Return a set of ARDAT messages containing currentEventState information
+                 * Format of the ARDAT is:
+                 * Data1 = 0 (Event)
+                 * Data2 = index
+                 * Data3 = event state
+                 * Data4 = 0 Unused
+                 * Data5 = 0 Unused
+                 */
+                cbusMsg[d3] = 0;
+                cbusMsg[d4] = timedResponseStep;
+                cbusMsg[d5] = currentEventState[timedResponseStep];
+                cbusMsg[d6] = 0;
+                cbusMsg[d7] = 0;
+            
+                if (!cbusSendOpcMyNN( 0, OPC_ARDAT, cbusMsg )) {
+                    // we were unable to send the message so don't update step so that we can try again next time
+                    return;
+                }
+            }
+            break;
+        case TIMED_RESPONSE_RQDAT_RULES:
+            if (timedResponseStep >= ruleIndex) {  // finished?
+                timedResponse = TIMED_RESPONSE_NONE;
+                timedResponseStep = 0;
+                return;
+            }
+            /**
+             * Request to get event status data from this module.
+             * Return a set of ARDAT messages containing currentEventState information
+             * Format of the ARDAT is:
+             * Data1 = 1 (Rule)
+             * Data2 = index
+             * Data3 = rule state
+             * Data4 = 0 Unused
+             * Data5 = 0 Unused
+             */
+            cbusMsg[d3] = 1;
+            cbusMsg[d4] = timedResponseStep;
+            cbusMsg[d5] = results[timedResponseStep];
+            cbusMsg[d6] = 0;
+            cbusMsg[d7] = 0;
+            
+            if (!cbusSendOpcMyNN( 0, OPC_ARDAT, cbusMsg )) {
+                // we were unable to send the message so don't update step so that we can try again next time
+                return;
+            }
+            break;
+    }
+    timedResponseStep++;
+}
+
+
+/**
+ * Request to get status data from this module.
+ * Return a set of ARDAT messages containing currentEventState and ruleState information
+ */
+void doRqdat(void) {
+    timedResponse = TIMED_RESPONSE_RQDAT_EVENTS;
+    timedResponseStep = 0;
 }
 
 

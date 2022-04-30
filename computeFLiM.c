@@ -118,7 +118,7 @@ void computeFlimInit(void) {
     
 }
 
-void doArdat(void) {
+void doAcdat(void) {
     cbusMsg[d0] = OPC_ACDAT;
     // d1 and d2 are the NN
     cbusMsg[d3] = ruleState;

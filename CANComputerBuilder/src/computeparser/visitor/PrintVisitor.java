@@ -7,6 +7,7 @@ import computeparser.ASTAndExpression;
 import computeparser.ASTDefine;
 import computeparser.ASTDefineList;
 import computeparser.ASTEventLiteral;
+import computeparser.ASTEventState;
 import computeparser.ASTExpression;
 import computeparser.ASTIdentifier;
 import computeparser.ASTMessage;
@@ -198,6 +199,13 @@ public class PrintVisitor implements ComputeGrammarVisitor {
 	@Override
 	public Object visit(ASTSetNN node, Object data) {
 		indented("ASTsetNN ");
+		indent++;node.childrenAccept(this, data);indent--;
+		return null;
+	}
+
+	@Override
+	public Object visit(ASTEventState node, Object data) {
+		indented("ASTEventState "+node.getState());
 		indent++;node.childrenAccept(this, data);indent--;
 		return null;
 	}

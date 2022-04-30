@@ -61,12 +61,12 @@ static BYTE bufferIndex;    // where to write the next event
 extern BYTE timeLimit;
 
 // forward declarations
-BYTE currentEventState[NUM_EVENTS]; // use a BYTE even though a BOOL would do
+EventState currentEventState[NUM_EVENTS]; // Indicates whether an ON or OFF was last received
 
 
 void computeEventsInit(void) {
     for (bufferIndex=0; bufferIndex < NUM_EVENTS; bufferIndex++) {
-        currentEventState[bufferIndex] = 0;
+        currentEventState[bufferIndex] = EVENT_STATE_UNKNOWN;
     }
     bufferIndex=0;
     
@@ -88,7 +88,7 @@ void processEvent(BYTE tableIndex, BYTE * msg) {
      // store event
     ev = getEv(tableIndex, 0);   // the user's index is in ev#1
     if (ev < 0) {
-        // this shouldn't happen
+        // this isn't an event in which we are interrested.
         return;
     }
     if (! (opc&EVENT_ON_MASK)) {
@@ -104,7 +104,7 @@ void processEvent(BYTE tableIndex, BYTE * msg) {
     /* enable the timer*/
     TMR_IE = 1;
     // store current state
-    currentEventState[ev] = !(opc&EVENT_ON_MASK);   // set if ON event
+    currentEventState[ev] = !(opc&EVENT_ON_MASK)?EVENT_STATE_ON : EVENT_STATE_OFF;   // set if ON event
         
     bufferIndex++;
     if (bufferIndex >= NUM_BUFFERS) bufferIndex = 0;

@@ -21,7 +21,7 @@ BYTE expressionIndex;   // tracks the number of Expression structures allocated
 RuleState ruleState;    // keeps track if there are any errors whilst parsing rules
 BYTE nvPtr;             // index into NVs whilst parsing the rules
 BYTE timeLimit;
-static BOOL results[NUM_RULES]; // remeber the previous result of the expression
+BOOL results[NUM_RULES]; // remember the previous result of the expression
                                 // so we can see then it changes
 #define TOO_MANY        0xFF
 
@@ -34,6 +34,7 @@ void doActions(BYTE nvi);
  */
 void ruleInit(void) {
     BYTE i;
+    BYTE b;
     rules = (rom near Rule*)AT_RULES;
     expressions = (rom near Expression*)AT_EXPRESSIONS;
     for (i=0; i<NUM_RULES; i++) {
@@ -43,6 +44,11 @@ void ruleInit(void) {
     expressionIndex = readFlashBlock(AT_EXPRESSIONINDEX);
     ruleState = readFlashBlock(AT_RULESTATE);
     nvPtr = readFlashBlock(AT_NVPTR);
+    for (i=0; i<ruleIndex; i++) {
+        b = readFlashBlock(&(rules[i].expression));
+        timeLimit = readFlashBlock(&(rules[i].within));
+        results[i] = execute(b);    // Just store the result and don't do the actions
+    }
 }
 
 /**
@@ -89,24 +95,27 @@ void runRules(void) {
 void doActions(BYTE nvi) {
     COMPUTE_ACTION_T action;
     BYTE op;
-    BYTE evt;
+    BYTE arg;
     while (1) {
         op = getNv(nvi++);
-
-        evt = getNv(nvi++);
+        arg = getNv(nvi++);
         
         switch(op) {
-            case DELAY:
+            case DELAY:     // a delay has a time value argument
                 action.op = ACTION_OPCODE_DELAY;
-                action.arg = evt;
+                action.arg = arg;
                 break;
-            case SEND:
-                if (EVENT_STATE(evt)) {
+            case SEND:      // SEND has an event number argument
+                if (EVENT_STATE(arg)) {
                     action.op = ACTION_OPCODE_SEND_ON;
                 } else {
                     action.op = ACTION_OPCODE_SEND_OFF;
                 }
-                action.arg = EVENT_NO(evt);
+                action.arg = EVENT_NO(arg);
+                break;
+            case CBUS:      // CBUS has a CBUS message following the CBUS action. We save the NV index
+                action.op = ACTION_OPCODE_SEND_CBUS;
+                action.arg = nvi-1;
                 break;
             default: 
                 nextQueue();
@@ -143,14 +152,13 @@ void load(void) {
 		r = newRule();
 		if (r < 0) {ruleState = TOO_MANY_RULES; break;}
 		writeFlashByte((BYTE*)(&(rules[r].within)), getNv(nvPtr++));    // the time limit
-    	writeFlashByte((BYTE*)(&(rules[r].expression)), newExpression());   // allocate an Expression structure
-        e = newExpression();
+        e = newExpression();                                // allocate an Expression structure
         if (e == TOO_MANY) {
             ruleIndex--;
             ruleState=TOO_MANY_EXPRESSIONS;
             break;
         }
-        writeFlashByte((BYTE*)(&(rules[r].expression)), e);   // allocate an Expression structure
+        writeFlashByte((BYTE*)(&(rules[r].expression)), e);   // save the Expression structure
         loadExpression(e);                                    // Load the expression from NVs
         if (ruleState != VALID) break;
         writeFlashByte((BYTE*)(&(rules[r].actions)), nvPtr);   // point to the actions in the NVs
@@ -228,8 +236,17 @@ void loadExpression(BYTE expression) {
             if (val == 0) {ruleState = INVALID_EVENT; return;}
             if (EVENT_NO(val) > (NUM_EVENTS)) {ruleState = INVALID_EVENT; return;}
             break;
+        case INPUT:
+            // index
+            val = getNv(nvPtr++);
+            writeFlashByte((BYTE*)(&(expressions[expression].op1.index)), val);
+            if (val > 1) {ruleState = INVALID_INDEX; return;}
+            break;
         case STATE_ON:
         case STATE_OFF:
+        case EXPLICIT_STATE_ON:
+        case EXPLICIT_STATE_OFF:
+        case EXPLICIT_STATE_UNKNOWN:
             // One event WITHOUT on/off state
             val = getNv(nvPtr++);
             writeFlashByte((BYTE*)(&(expressions[expression].op1.eventNo)), val);
@@ -286,7 +303,7 @@ void loadExpression(BYTE expression) {
  */
 void skipActions(void) {
     BYTE aop = 0;
-    BYTE evt;
+    BYTE arg;
     
     while (1) {
         // get the OPCODE
@@ -294,23 +311,17 @@ void skipActions(void) {
         
         switch (aop) {
             case SEND:
-                // get the argument
-                evt = getNv(nvPtr++);
-                if (evt & 0x40) { // evt needs to have bit 6 clear so it will fit into ActionQueue
-                    ruleState = ARGUMENT_TOO_LARGE; 
-                    return;
-                }
-                break;
             case DELAY:
-                // get the argument
-                evt = getNv(nvPtr++);
-                if (evt > 0x3F) { // evt needs to be only 6 bits so it will fit into ActionQueue
-                    ruleState = ARGUMENT_TOO_LARGE; 
-                    return;
-                }
+                // skip the argument
+                nvPtr++;
+                break;
+            case CBUS:
+                arg = getNv(nvPtr++);   // the CBUS OPC
+                arg = (arg >> 5);       // number of arguments
+                nvPtr += arg;           // skip forward
                 break;
             default:
-                nvPtr--;    // move back so that we leave pointer at next instruction
+                nvPtr--;    // leave pointer ready to get THEN or RULE
                 return;
         }
 	}
@@ -343,18 +354,35 @@ BYTE execute(BYTE e) {
             return sequence2(op2, op1);
         case SEQUENCE:
             return sequenceMulti(op1, op2);
-        case STATE_ON:
+        case STATE_ON:              // An ON must exist
+        case EXPLICIT_STATE_ON:
             if (op1 >= NUM_EVENTS) return 0;
-            return (currentEventState[op1] != 0);
-        case STATE_OFF:
+            return (currentEventState[op1] == EVENT_STATE_ON);
+        case STATE_OFF:             // OFF or UNKNOWN
             if (op1 >= NUM_EVENTS) return 0;
-            return (currentEventState[op1] == 0);
+            return (currentEventState[op1] == EVENT_STATE_OFF) || 
+                    (currentEventState[op1] == EVENT_STATE_UNKNOWN);
+        case EXPLICIT_STATE_OFF:    // An OFF event must exist
+            if (op1 >= NUM_EVENTS) return 0;
+            return (currentEventState[op1] == EVENT_STATE_OFF);
+        case EXPLICIT_STATE_UNKNOWN:    // An OFF event must exist
+            if (op1 >= NUM_EVENTS) return 0;
+            return (currentEventState[op1] == EVENT_STATE_UNKNOWN);
         case COUNT:
             if (EVENT_NO(op1) >= NUM_EVENTS) return 0;
             return countEvent(op1);
         case RECEIVED:
             if (EVENT_NO(op1) >= NUM_EVENTS) return 0;
             return receivedEvent(op1);
+        case INPUT:
+            switch (op1) {
+                case 1:
+                    return PORTBbits.RB0;
+                case 2:
+                    return PORTBbits.RB1;
+                default: 
+                    return 0;      // an error
+            }
         case INTEGER:
             return op1;
         case NOT:

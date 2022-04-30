@@ -13,6 +13,9 @@ typedef enum {
 	RECEIVED	=(224),	// E0 followed by one NV giving the event index
     STATE_ON	=(225),	// E1 followed by one NV giving the event index
 	STATE_OFF	=(226),	// E2 followed by one NV giving the event index
+    EXPLICIT_STATE_ON = 227,    // E3 followed by one NV giving the event index
+    EXPLICIT_STATE_OFF = 228,   // E4 followed by one NV giving the event index
+    EXPLICIT_STATE_UNKNOWN = 229,   // E5 followed by one NV giving the event index
 	
 	BEFORE		=(230),	// E6 followed by two NV giving the event indexes
 	
@@ -31,11 +34,13 @@ typedef enum {
 	AND			=246,	// F6 followed by two boolean expressions
 	NOT         =247,	// F7 followed by two boolean expressions
 	OR			=248,	// F8 followed by two boolean expressions
-	
+    INPUT       =249,   // F9 followed by index
 	COUNT       =250,	// FA followed by one NV giving the event index
+    /* Actions */
 	DELAY		=251,	// FB followed by one NV giving the time period in 0.1sec units
-	
+    CBUS        =252,   // FC followed by a CBUS message
 	SEND    	=253,	// FD followed by one NV giving the event index
+    /* End triggers the load */
 	END			=254    // FE 
 } OpCodes;
 
@@ -50,6 +55,7 @@ typedef union {
     BYTE eventNo;
     BYTE expression;
     BYTE integer;
+    BYTE index;
 } Operand;
 
 typedef struct {
@@ -82,7 +88,8 @@ typedef enum  {
     UNKNOWN_INSTRUCTION     =5,
     UNKNOWN_ACTION          =6,
     INVALID_EVENT           =7,
-    ARGUMENT_TOO_LARGE      =8
+    ARGUMENT_TOO_LARGE      =8,
+    INVALID_INDEX           =9
 } RuleState;
 
 extern BYTE ruleIndex;

@@ -10,9 +10,11 @@ class ASTPrimaryBooleanExpression extends SimpleNode {
 		AFTER, 
 		STATE,
 		RECEIVED,
-		SEQUENCE
+		SEQUENCE,
+		INPUT
 	};
 	OpCodes opCode;
+	private String index;
   public ASTPrimaryBooleanExpression(int id) {
     super(id);
   }
@@ -32,6 +34,14 @@ public void setOpCode(OpCodes o) {
 }
 public OpCodes getOpCode() {
 	return opCode;
+}
+
+public void setIndex(String image) {
+	index = image;
+	
+}
+public String getIndex() {
+	return index;
 }
 
 }

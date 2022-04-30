@@ -7,6 +7,7 @@ import computeparser.ASTAndExpression;
 import computeparser.ASTDefine;
 import computeparser.ASTDefineList;
 import computeparser.ASTEventLiteral;
+import computeparser.ASTEventState;
 import computeparser.ASTExpression;
 import computeparser.ASTIdentifier;
 import computeparser.ASTMessage;
@@ -153,6 +154,9 @@ public class fcuDefinesVisitor implements ComputeGrammarVisitor {
 	public Object visit(ASTSetNN node, Object data) {
 		return null;
 	}
-	
 
+	@Override
+	public Object visit(ASTEventState node, Object data) {
+		return null;
+	}
 }

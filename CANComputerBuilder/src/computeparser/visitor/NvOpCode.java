@@ -6,7 +6,10 @@ public enum NvOpCode {
 	RECEIVED			(224),	// followed by one NV giving the event index
     STATE_ON			(225),	// followed by one NV giving the event index
 	STATE_OFF			(226),	// followed by one NV giving the event index
-
+	EXPLICIT_STATE_ON 	(227),    // E3 followed by one NV giving the event index
+    EXPLICIT_STATE_OFF	(228),   // E4 followed by one NV giving the event index
+    EXPLICIT_STATE_UNKNOWN(229),   // E5 followed by one NV giving the event index
+	
 	BEFORE				(230),	// followed by two NV giving the event indexes
 	
 	AFTER				(234),	// followed by two NV giving the event indexes
@@ -24,10 +27,11 @@ public enum NvOpCode {
 	AND					(246),	// followed by two boolean expressions
 	NOT					(247),	// followed by one boolean expression
 	OR					(248),	// followed by two boolean expressions
-
+    INPUT       		(249),   // F9 followed by index
 	COUNT				(250),	// followed by one NV giving the event index
+	
 	DELAY				(251),	// followed by one NV giving the time period in 0.1sec units
-
+    CBUS        		(252),   // FC followed by a CBUS message
 	SEND				(253),	// followed by one NV giving the event index
 	END					(254);
 

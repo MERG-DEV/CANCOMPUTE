@@ -7,6 +7,7 @@ import computeparser.ASTAndExpression;
 import computeparser.ASTDefine;
 import computeparser.ASTDefineList;
 import computeparser.ASTEventLiteral;
+import computeparser.ASTEventState;
 import computeparser.ASTExpression;
 import computeparser.ASTIdentifier;
 import computeparser.ASTMessage;
@@ -58,22 +59,10 @@ public class GridConnectDefinesVisitor implements ComputeGrammarVisitor {
 	public Object visit(ASTDefine node, Object data) {		
 		ASTIdentifier id = (ASTIdentifier)node.jjtGetChild(0);
 		ASTEventLiteral ev = (ASTEventLiteral)node.jjtGetChild(1);
-		System.out.println(":S0B20ND2"+hexQuad(ev.getEvent().getNN())+hexQuad(ev.getEvent().getEN())+"01"+hexPair(Variables.getIndex())+";");	// EVLRN
+		System.out.println(":S0B20ND2"+Util.hexQuad(ev.getEvent().getNN())+Util.hexQuad(ev.getEvent().getEN())+"01"+Util.hexPair(Variables.getIndex())+";");	// EVLRN
 		Variables.setIndex(id.getName());
 		node.childrenAccept(this, data);
 		return null;
-	}
-
-	private String hexPair(int ih) {
-		String h = "00"+Integer.toHexString(ih);
-		int l = h.length();
-		return h.substring(l-2,l);
-	}
-
-	private String hexQuad(int ih) {
-		String h = "0000"+Integer.toHexString(ih);
-		int l = h.length();
-		return h.substring(l-4,l);
 	}
 
 	@Override
@@ -165,6 +154,10 @@ public class GridConnectDefinesVisitor implements ComputeGrammarVisitor {
 	public Object visit(ASTSetNN node, Object data) {
 		return null;
 	}
-	
 
+	@Override
+	public Object visit(ASTEventState node, Object data) {
+		return null;
+	}
+	
 }

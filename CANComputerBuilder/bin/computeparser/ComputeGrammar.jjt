@@ -29,13 +29,19 @@ NNEN: {HEXDigit}4
   NODE_DEFAULT_VOID = true;
   NODE_PREFIX = "AST";}PARSER_BEGIN(ComputeGrammar)package computeparser;
 
-public class ComputeGrammar{  public static void main(String args [])  {    System.out.println("Reading from standard input...");    System.out.print("Enter an expression like \"1+(2+3)*var;\" :");    new ComputeGrammar(System.in);    try    {      SimpleNode n = ComputeGrammar.Start();      n.dump("");      System.out.println("Thank you.");    }    catch (Exception e)    {      System.out.println("Oops.");      System.out.println(e.getMessage());    }  }}PARSER_END(ComputeGrammar)SKIP :{  " "| "\t"| "\n"| "\r"| < "//" (~[ "\n", "\r" ])*    (      "\n"    | "\r"    | "\r\n"    ) >
+public class ComputeGrammar{  public static void main(String args [])  {    System.out.println("Reading from standard input...");    System.out.print("Enter an expression like \"1+(2+3)*var;\" :");    new ComputeGrammar(System.in);    try    {      SimpleNode n = ComputeGrammar.Start();      n.dump("");      System.out.println("Thank you.");    }    catch (Exception e)    {      System.out.println("Oops.");      System.out.println(e.getMessage());
+      System.out.println(e);    }  }}PARSER_END(ComputeGrammar)SKIP :{  " "| "\t"| "\n"| "\r"| < "//" (~[ "\n", "\r" ])*    (      "\n"    | "\r"    | "\r\n"    ) >
 | < "#" (~[ "\n", "\r" ])*
     (
       "\n"
     | "\r"
     | "\r\n"
     ) >| < "/*" (~[ "*" ])* "*"    (      ~[ "/" ] (~[ "*" ])* "*"    )*    "/" >}TOKEN : /* LITERALS */{  < INTEGER_LITERAL :    < DECIMAL_LITERAL >   | < HEX_LITERAL >   | < OCTAL_LITERAL >     >| < #DECIMAL_LITERAL : [ "1"-"9" ] ([ "0"-"9" ])* >| < #HEX_LITERAL : "0" [ "x", "X" ] ([ "0"-"9", "a"-"f", "A"-"F" ])+ >| < #OCTAL_LITERAL : "0" ([ "0"-"7" ])* >}
+
+TOKEN : /* LITERALS */
+{
+  <  CBUS_LITERAL : "\"" ([ "0"-"9", "a"-"f", "A"-"F" ])+ "\"" >
+}
 
 TOKEN : /* LITERALS */
 {
@@ -47,7 +53,8 @@ TOKEN : /* LITERALS */
   | < HEX_LITERAL > 
   | < OCTAL_LITERAL > )
     >
-}TOKEN : /* IDENTIFIERS */{  < IDENTIFIER :    "$" < LETTER >    (      < LETTER >    | < DIGIT >    )* >| < #LETTER : [ "_", "a"-"z", "A"-"Z" ] >| < #DIGIT : [ "0"-"9" ] >}
+}
+TOKEN : /* IDENTIFIERS */{  < IDENTIFIER :    "$" < LETTER >    (      < LETTER >    | < DIGIT >    )* >| < #LETTER : [ "_", "a"-"z", "A"-"Z" ] >| < #DIGIT : [ "0"-"9" ] >}
 
 TOKEN : /* KEYWORDS and OPERATORS*/
 {
@@ -58,17 +65,22 @@ TOKEN : /* KEYWORDS and OPERATORS*/
   | < OR: "or" >
   | < ON: "on" >
   | < OFF: "off" >
+  | < UNKNOWN: "unknown" >
+  | < EXPLICIT_ON: "explicit_on" >
+  | < EXPLICIT_OFF: "explicit_off" >
   | < NN: "NN:" >
   | < EN: "EN:" >
   | < COUNT: "count" >
   | < STATE: "state" >
   | < RECEIVED: "received" >
+  | < INPUT: "input" >
   | < SEMICOLON: ";" >
   | < COMMA: "," >
   | < DEFINE: "define" >
   | < DELAY: "delay" >
   | < WHEN: "when" >
   | < SEND: "send" >
+  | < CBUS: "cbus" >
   | < THEN: "then" >
   | < WITHIN: "within" >
   | < LPAREN: "(" >
@@ -185,6 +197,7 @@ ASTActionList ActionList() #ActionList:
 
 ASTAction Action() #Action:
 {
+  Token c = null;
 }
 {    <SEND> Message()
       {
@@ -196,6 +209,12 @@ ASTAction Action() #Action:
         jjtThis.setAction(ASTAction.OpCodes.DELAY);
     	return jjtThis;
   	}
+  | <CBUS> "\"" c=<CBUS_LITERAL> "\""
+  {
+    	jjtThis.setAction(ASTAction.OpCodes.CBUS);
+    	jjtThis.setCbusMessage(c.image);
+    	return jjtThis;
+  }
 }
 
 
@@ -267,7 +286,7 @@ ASTPrimaryBooleanExpression PrimaryBooleanExpression() #PrimaryBooleanExpression
   {
     return jjtThis;
   }
-  |  <STATE> <LPAREN> Identifier() <RPAREN> (<EQ> | <LONGEQ> | <ISEQ>) MessageState() 
+  |  <STATE> <LPAREN> Identifier() <RPAREN> (<EQ> | <LONGEQ> | <ISEQ>) EventState() 
   {
     jjtThis.setOpCode(ASTPrimaryBooleanExpression.OpCodes.STATE);	// we'll change to off later if necessary
     return jjtThis;
@@ -277,7 +296,12 @@ ASTPrimaryBooleanExpression PrimaryBooleanExpression() #PrimaryBooleanExpression
     jjtThis.setOpCode(ASTPrimaryBooleanExpression.OpCodes.RECEIVED);	// we'll change to off later if necessary
     return jjtThis;
   }
-  
+  | <INPUT> <LPAREN> t=<INTEGER_LITERAL> <RPAREN>
+  {
+    jjtThis.setOpCode(ASTPrimaryBooleanExpression.OpCodes.INPUT);
+    jjtThis.setIndex(t.image);
+    return jjtThis;
+  }
 }
 
 
@@ -370,3 +394,39 @@ ASTMessageState MessageState() #MessageState:
   }
 }
 
+ASTEventState EventState() #EventState:
+{
+  Token t = null;
+}
+{
+  t=<ON>
+  {
+    System.out.println("*** got an On");
+    jjtThis.setState(t.image);
+  	return jjtThis;
+  }
+  | t=<OFF>
+  {
+    System.out.println("*** got an Off");
+    jjtThis.setState(t.image);
+  	return jjtThis;
+  }
+  | t=<UNKNOWN>
+  {
+    System.out.println("*** got an Unknown");
+    jjtThis.setState(t.image);
+  	return jjtThis;
+  }
+  | t=<EXPLICIT_ON>
+  {
+    System.out.println("*** got an Explicit_on");
+    jjtThis.setState(t.image);
+  	return jjtThis;
+  }
+  | t=<EXPLICIT_OFF>
+  {
+    System.out.println("*** got an EXPLICIT_off");
+    jjtThis.setState(t.image);
+  	return jjtThis;
+  }
+}

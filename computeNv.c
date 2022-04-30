@@ -91,7 +91,7 @@ void actUponNVchange(unsigned char index, unsigned char oldValue, unsigned char 
     if ((OpCodes)value == END) {
         load();
         // send message to indicate the result
-        doArdat();
+        doAcdat();
         // reset the state and empty the rx buffer
         computeEventsInit();
     }
@@ -102,7 +102,7 @@ void actUponNVchange(unsigned char index, unsigned char oldValue, unsigned char 
  * Set NVs back to factory defaults.
  */
 void factoryResetGlobalNv(void) {
-    writeFlashByte((BYTE*)(AT_NV + NV_SOD_DELAY), (BYTE)0);
+    writeFlashByte((BYTE*)(AT_NV + NV_SOD_DELAY), (BYTE)(0));
     writeFlashByte((BYTE*)(AT_NV + NV_RULES), END);
 
 #ifdef NV_CACHE
