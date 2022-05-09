@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import computebuilder.Event;
 import computeparser.ASTAction;
 import computeparser.ASTActionList;
 import computeparser.ASTAdditiveExpression;
@@ -38,6 +39,7 @@ import computeparser.SimpleNode;
 import computeparser.ASTPrimaryBooleanExpression.OpCodes;
 
 public class HexVisitor implements ComputeGrammarVisitor {
+	private final static int FLASH_BLOCK_SIZE = 0x40;
 	
 	private enum HexRecords {
 		HEADER(4),
@@ -53,6 +55,8 @@ public class HexVisitor implements ComputeGrammarVisitor {
 	
 	// address information
 	class AddressInfo {
+		public int version;
+		
 		public int ruleAddress;
 		public int numRules;
 		
@@ -68,9 +72,11 @@ public class HexVisitor implements ComputeGrammarVisitor {
 		public int ruleIndex;
 		public int expressionIndex;
 		public int ruleState;
-		public int vnPtr;
+		public int nvPtr;
 		
-		public AddressInfo(int ra, int nr, int ea, int ne, int va, int nv, int aa, int na, int ri, int ei, int rs, int np) {
+		public AddressInfo(int ver, int ra, int nr, int ea, int ne, int va, int nv, int aa, int na, int ri, int ei, int rs, int np) {
+			version = ver;
+			
 			ruleAddress = ra;
 			numRules = nr;
 			
@@ -86,16 +92,17 @@ public class HexVisitor implements ComputeGrammarVisitor {
 			ruleIndex = ri;
 			expressionIndex = ei;
 			ruleState = rs;
-			vnPtr = np;
+			nvPtr = np;
 		}
 	}
 	private enum Action {
 		ACTION_OPCODE_NOP(0),
-		ACTION_OPCODE_SEND_ON(1),
-		ACTION_OPCODE_SEND_OFF(2),
-		ACTION_OPCODE_DELAY(3),
-		ACTION_OPCODE_SEND_CBUS(4), 
-		ACTION_OPCODE_END(255);
+
+
+		ACTION_OPCODE_DELAY(251),
+		ACTION_OPCODE_SEND_CBUS(252), 
+		ACTION_OPCODE_SEND(253),
+		ACTION_OPCODE_END(254);
 		private final int code;
 		private Action(int i) {
 			code = i;
@@ -136,9 +143,6 @@ public class HexVisitor implements ComputeGrammarVisitor {
 		}
 	}
 	
-	private enum Opcodes {
-		
-	}
 	
 	private class Expression {
 		public Expression() {
@@ -153,18 +157,20 @@ public class HexVisitor implements ComputeGrammarVisitor {
 	
 	private Map<Integer, AddressInfo> addressInfos;
 	private RuleState ruleState;
-	private int vnPtr;
 	private List<Rule> rules;
 	private List<Expression> expressions;
 	private List<Integer> datas;
+	private ArrayList<Event> events;
 	private AddressInfo addressInfo;
 	private FileWriter fw;
+
 
 	public HexVisitor(Integer dataVersion) throws IOException {
 		
 		addressInfos = new HashMap<Integer, AddressInfo>();
 		/* Address info for data version 1 */
 		addressInfos.put(1, new AddressInfo(
+				2,				// flash version
 				0x7B7C,  50,	// rules
 				0x7924, 200,	// expressions
 				0x7C44, 100,	// events
@@ -175,10 +181,10 @@ public class HexVisitor implements ComputeGrammarVisitor {
 				0x7920			// nvPtr
 		));
 		ruleState = RuleState.VALID;
-		vnPtr = 1;
 		rules = new ArrayList<Rule>();
 		expressions = new ArrayList<Expression>();
 		datas = new ArrayList<Integer>();
+		events = new ArrayList<Event>();
 		
 		addressInfo = addressInfos.get(dataVersion);
 		if (addressInfo == null) {
@@ -188,6 +194,7 @@ public class HexVisitor implements ComputeGrammarVisitor {
 		fw = new FileWriter("rules.hex");
 		System.out.println("opened rules.hex for writing");
 		System.out.println("Running HexVisitor");
+		datas.add(addressInfo.version);		// NV#0 is the version
 	}
 
 	@Override
@@ -210,21 +217,148 @@ public class HexVisitor implements ComputeGrammarVisitor {
 
 	@Override
 	public Object visit(ASTDefineList node, Object data) {
-		/* output the header first */
-		System.out.println("writing header");
-		try {
-			fw.write(hexRecord(HexRecords.HEADER, 0, "0000"));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 		node.childrenAccept(this, data);
 		return null;
 	}
 
 	@Override
 	public Object visit(ASTRuleList node, Object data) {
+		int flashBlockStart=0;
+		int min_addr=0;
+		
 		node.childrenAccept(this, data);
 		/* Done all the processing, now output the actual records */
+		/* First output the param structure but change the load address to be that
+		 * of the first data structure in memory.
+		 * The version numbers in this param structure don't matter since this
+		 * data isn't actually written to the module but just used by FCU.
+		 */
+		try {
+			fw.write(hexRecord(HexRecords.HEADER, 0, "0000"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		try {
+			min_addr = Math.min(addressInfo.actionAddress, 
+					Math.min(addressInfo.eventAddress,
+					Math.min(addressInfo.expressionAddress, 
+					Math.min(addressInfo.ruleAddress, 
+					Math.min(addressInfo.actionAddress,
+					Math.min(addressInfo.ruleIndex,
+					Math.min(addressInfo.expressionIndex,
+					Math.min(addressInfo.ruleState, addressInfo.nvPtr))))))));
+			/* 
+			 * This is a nasty work-around for a limitation in Bootloader.asm
+			 * The address must point to the start of a flash block.
+			 * So let's round the address down and output some 0xFF as padding at the start.
+			 */
+			flashBlockStart = min_addr & ~(FLASH_BLOCK_SIZE-1);
+			System.out.println("min_addr="+Integer.toHexString(min_addr)+" flashBlockStart="+Integer.toHexString(flashBlockStart));
+			// address is little endian
+			String param1 = "A5623C6401FE020B0D01"+
+					Util.hexPair(flashBlockStart%256)+
+					Util.hexPair(flashBlockStart/256)+
+					"00000000";
+			String param2 = "0000010100000000140040080000";
+			fw.write(hexRecord(HexRecords.DATA, 0x820, param1));
+			// calculate the parameter checksum
+			// MANU_ID+				= A5
+			// MINOR_VER+			= 62
+			// MODULE_ID+			= 3C
+			// NUM_EVENTS+			= 64
+			// EVperEVT+			= 01
+			// (NV_NUM-1)+			= FE
+			// MAJOR_VER+			= 02
+			// MODULE_FLAGS+		= 0B
+			// CPU+					= 0D
+			// PB_CAN +				= 01	Total of this = 02C1
+			// (LOAD_ADDRESS>>8)+	= flashBlockStart/256
+			// (LOAD_ADDRESS&0xFF)+	= flashBlockStart%256
+			// CPUM_MICROCHIP+		= 01
+			// BETA+				= 01
+			// sizeof(ParamVals)+	= 14
+			// (MNAME_ADDRESS>>8)+	= 40
+			// (MNAME_ADDRESS&0xFF) = 08	Total of this part = 0064
+			int chksum = 0x02C1 + flashBlockStart/256 + flashBlockStart%256 + 0x005e;
+					
+			fw.write(hexRecord(HexRecords.DATA, 0x830, param2+
+					Util.hexPair(chksum%256)+
+					Util.hexPair(chksum/256)
+			));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		try {
+			fw.write(hexRecord(HexRecords.HEADER, 0, "0000"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		// Now output any necessary padding
+		for (;flashBlockStart<min_addr;flashBlockStart++) {
+			try {
+				fw.write(hexRecord(HexRecords.DATA, flashBlockStart, "FF"));
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}
+
+		
+		/* now the index and state data */
+		try {
+			fw.write(hexRecord(HexRecords.DATA, addressInfo.nvPtr, 
+					Util.hexPair(datas.size())));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		try {
+			fw.write(hexRecord(HexRecords.DATA, addressInfo.ruleState, 
+					Util.hexPair(ruleState.getCode())));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		try {
+			fw.write(hexRecord(HexRecords.DATA, addressInfo.expressionIndex, 
+					Util.hexPair(expressions.size())));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		try {
+			fw.write(hexRecord(HexRecords.DATA, addressInfo.ruleIndex, 
+					Util.hexPair(rules.size())));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}	
+		
+		/* Next the Expressions */
+		try {
+			fw.write(hexRecord(HexRecords.HEADER, 0, "0000"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		if (expressions.size() > addressInfo.numExpressions) {
+			System.out.println("Too many expressions "+expressions.size()+" max for module="+addressInfo.numExpressions);
+			try {
+				fw.write(hexRecord(HexRecords.DATA, addressInfo.ruleState,
+						Util.hexPair(RuleState.TOO_MANY_EXPRESSIONS.getCode())));
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+			return null;
+		}
+		for (Expression e : expressions) {
+			try {
+				//System.out.println("e="+e+" op="+e.opCode+" op1="+e.op1+" op2="+e.op2);
+				fw.write(hexRecord(HexRecords.DATA, addressInfo.expressionAddress+expressions.indexOf(e)*3,
+						Util.hexPair(e.opCode.code())+
+						Util.hexPair(e.op1!=null?e.op1.expression!=null?expressions.indexOf(e.op1.expression):e.op1.number:0)+		// op1
+						Util.hexPair(e.op2!=null?e.op2.expression!=null?expressions.indexOf(e.op2.expression):e.op2.number:0)		// op2
+						));	// expressions are 3 bytes
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+		}
 		
 		/* next the rules */
 		try {
@@ -254,34 +388,34 @@ public class HexVisitor implements ComputeGrammarVisitor {
 				e1.printStackTrace();
 			}	
 		}
-		/* next the Expressions */
+		/* next the events */
 		try {
 			fw.write(hexRecord(HexRecords.HEADER, 0, "0000"));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		if (expressions.size() > addressInfo.numExpressions) {
-			System.out.println("Too many expressions "+expressions.size()+" max for module="+addressInfo.numExpressions);
+		if (events.size() >= addressInfo.numEvents) {
+			System.out.println("Too many events "+events.size()+" max for module="+addressInfo.numEvents);
 			try {
 				fw.write(hexRecord(HexRecords.DATA, addressInfo.ruleState,
-						Util.hexPair(RuleState.TOO_MANY_EXPRESSIONS.getCode())));
+						Util.hexPair(RuleState.TOO_MANY_EVENTS.getCode()))+"");
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
 			return null;
 		}
-		for (Expression e : expressions) {
+		for (Event e:events) {
 			try {
-				System.out.println("e="+e+" op="+e.opCode+" op1="+e.op1+" op2="+e.op2);
-				fw.write(hexRecord(HexRecords.DATA, addressInfo.expressionAddress+expressions.indexOf(e)*3,
-						Util.hexPair(e.opCode.code())+
-						Util.hexPair(e.op1!=null?e.op1.expression!=null?expressions.indexOf(e.op1.expression):e.op1.number:0)+		// op1
-						Util.hexPair(e.op2!=null?e.op2.expression!=null?expressions.indexOf(e.op2.expression):e.op2.number:0)		// op2
-						));	// expressions are 3 bytes
-			} catch (IOException e1) {
-				e1.printStackTrace();
+				fw.write(hexRecord(HexRecords.DATA, addressInfo.eventAddress+events.indexOf(e)*7,	//Address - events are 7 bytes
+						"11FF"+					// 1 EV, not a continuation, not free
+						Util.hexSwapQuad(e.getNN())+	// NN
+						Util.hexSwapQuad(e.getEN())+	// EN
+						Util.hexPair(events.indexOf(e)+1)));	// EV1
+			} catch (IOException ee) {
+				ee.printStackTrace();
 			}
 		}
+		
 		/* next the Actions stored in the NV space */
 		try {
 			fw.write(hexRecord(HexRecords.HEADER, 0, "0000"));
@@ -304,23 +438,17 @@ public class HexVisitor implements ComputeGrammarVisitor {
 						Util.hexPair(datas.get(i))
 						));
 			} catch (IOException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}	
 		}
-		/* next the index and state data */
-		try {
-			fw.write(hexRecord(HexRecords.HEADER, 0, "0000"));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		
+		
 		/* the trailer */
 		try {
 			fw.write(hexRecord(HexRecords.TRAILER, 0, ""));
 		} catch (IOException e2) {
 			e2.printStackTrace();
 		}
-		// no trailer needed
 		try {
 			System.out.println("Closing file");
 			fw.close();
@@ -337,7 +465,7 @@ public class HexVisitor implements ComputeGrammarVisitor {
 				Util.hexQuad(address)+
 				Util.hexPair(type.getCode())+
 				record+
-				Util.hexPair(checksum(
+				Util.hexPair(hex_checksum(
 						Util.hexPair(record.length()/2)+
 						Util.hexQuad(address)+
 						Util.hexPair(type.getCode())+
@@ -345,7 +473,15 @@ public class HexVisitor implements ComputeGrammarVisitor {
 				"\n";
 	}
 
-	private int checksum(String string) {
+	private int hex_checksum(String string) {
+		int ck = 0;
+		for (int i=0; i<string.length(); i+=2) {
+			String ss = string.substring(i, i+2);
+			ck -= Util.fromHex(ss.charAt(0), ss.charAt(1));
+		}
+		return ck;
+	}
+	private int param_checksum(String string) {
 		int ck = 0;
 		for (int i=0; i<string.length(); i+=2) {
 			String ss = string.substring(i, i+2);
@@ -358,29 +494,12 @@ public class HexVisitor implements ComputeGrammarVisitor {
 	public Object visit(ASTDefine node, Object data) {
 		ASTIdentifier id = (ASTIdentifier)node.jjtGetChild(0);
 		ASTEventLiteral ev = (ASTEventLiteral)node.jjtGetChild(1);
+
 		System.out.println("Got a define for identifier("+id.getName()+")="+ev.getEvent());
 		System.out.println("Add Event "+ev.getEvent()+" EV#1="+Variables.getIndex());
-		
-		try {
-			fw.write(hexRecord(HexRecords.DATA, addressInfo.eventAddress+Variables.getIndex()*7,	//Address - events are 7 bytes
-					"1000"+					// 1 EV, not a continuation, not free
-					Util.hexQuad(ev.getEvent().getNN())+	// NN
-					Util.hexQuad(ev.getEvent().getEN())+	// EN
-					Util.hexPair(Variables.getIndex())));	// EV1
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		events.add(ev.getEvent());
 		Variables.setIndex(id.getName());
-		if (Variables.getIndex() >= addressInfo.numEvents) {
-			System.out.println("Too many events "+Variables.getIndex()+" max for module="+addressInfo.numEvents);
-			try {
-				fw.write(hexRecord(HexRecords.DATA, addressInfo.ruleState,
-						Util.hexPair(RuleState.TOO_MANY_EVENTS.getCode()))+"");
-			} catch (IOException e1) {
-				e1.printStackTrace();
-			}
-			return null;
-		}
+		
 		node.childrenAccept(this, data);
 		return null;
 	}
@@ -440,26 +559,26 @@ public class HexVisitor implements ComputeGrammarVisitor {
 			datas.add((Integer) node.jjtGetChild(0).jjtAccept(this, data));
 		}
 		if (node.getAction() == ASTAction.OpCodes.SEND) {	// Event
+			datas.add(Action.ACTION_OPCODE_SEND.getCode());
 			int eventIndex = (Integer) node.jjtGetChild(0).jjtAccept(this, data);
-			if ((eventIndex & 0x80) == 0) {
-				datas.add(Action.ACTION_OPCODE_SEND_OFF.getCode());
-			} else {
-				datas.add(Action.ACTION_OPCODE_SEND_ON.getCode());
-			}
-			datas.add(eventIndex&0x7F);
+			
+			datas.add(eventIndex);
 		}
 		if (node.getAction() == ASTAction.OpCodes.CBUS) {	// Hex string
 			datas.add(Action.ACTION_OPCODE_SEND_CBUS.getCode());
 			String m = node.getCbusMessage();
+			//System.out.println("m="+m);
 			// go through the supplied message
 			List<Integer> bytes = new ArrayList<Integer>();
-			for (int i=m.length()-1; i>=0; i--) {	// start at the end
-				char c1 = m.charAt(i--);
-				char c2 = '0';
-				if (i >=0) c2 = m.charAt(i);
+			for (int i=0; i<m.length(); i++) {	// start at the end
+				char c1 = m.charAt(i);
+				i++;
+				char c2 = m.charAt(i);
+				//System.out.println("c1="+c1+" c2="+c2);
 				Integer b = Util.fromHex(c1, c2);
-				bytes.add(0, b);					// add to start
+				bytes.add(b);
 			}
+			//System.out.println("bytes="+bytes);
 			// check that the number of bytes supplied matched the length defined by opcode
 			int opcode = bytes.get(0);
 			int len = (opcode >> 5)+1;
@@ -662,7 +781,7 @@ public class HexVisitor implements ComputeGrammarVisitor {
 			Expression e = new Expression();
 			expressions.add(e);
 			e.opCode = NvOpCode.INPUT;
-			System.out.println("INPUT index="+node.getIndex());
+			//System.out.println("INPUT index="+node.getIndex());
 			e.op1 = new Operand();
 			e.op1.number = Integer.parseInt(node.getIndex());
 			return e;

@@ -209,10 +209,10 @@ ASTAction Action() #Action:
         jjtThis.setAction(ASTAction.OpCodes.DELAY);
     	return jjtThis;
   	}
-  | <CBUS> "\"" c=<CBUS_LITERAL> "\""
+  | <CBUS> c=<CBUS_LITERAL>
   {
     	jjtThis.setAction(ASTAction.OpCodes.CBUS);
-    	jjtThis.setCbusMessage(c.image);
+    	jjtThis.setCbusMessage(c.image.substring(1,c.image.length()-1));
     	return jjtThis;
   }
 }

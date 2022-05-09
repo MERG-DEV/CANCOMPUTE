@@ -88,7 +88,7 @@ void processEvent(BYTE tableIndex, BYTE * msg) {
      // store event
     ev = getEv(tableIndex, 0);   // the user's index is in ev#1
     if (ev < 0) {
-        // this isn't an event in which we are interrested.
+        // this isn't an event in which we are interested.
         return;
     }
     if (! (opc&EVENT_ON_MASK)) {

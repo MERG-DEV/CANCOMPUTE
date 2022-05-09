@@ -3,12 +3,40 @@
  */
 
 // define some events first
-define $event1 = NN:1111 EN:1112;
-define $event2 = NN:2221 EN:2222;
-define $event3 = NN:3331 EN:3332;
-define $event4 = NN:4441 EN:4442;
+// input events
+define $event1 = NN:0x0111 EN:0x1111;
+define $event2 = NN:0x0222 EN:0x2222;
+define $event3 = NN:0x0333 EN:0x3333;
+define $event4 = NN:0x0444 EN:0x4444;
+define $event5 = NN:0x0555 EN:0x5555;
+define $event6 = NN:0x0666 EN:0x6666;
+define $event7 = NN:0x0777 EN:0x7777;
+define $event8 = NN:0x0888 EN:0x8888;
+
+// output events
+define $event11 = NN:0x1111 EN:0x1111;
+define $event12 = NN:0x2222 EN:0x2222;
+define $event13 = NN:0x3333 EN:0x3333;
+define $event14 = NN:0x4444 EN:0x4444;
+define $event15 = NN:0x5555 EN:0x5555;
+define $event16 = NN:0x6666 EN:0x6666;
+define $event17 = NN:0x7777 EN:0x7777;
+define $event18 = NN:0x8888 EN:0x8888;
 
 // Now define some rules
-when input(1) and state($event1) is explicit_on within 2sec send on$event2;
-when count(on$event3) > 10 within 2sec send on$event4 then delay 19sec, send off$event4;
-when count(on$event1)>0 and count(off$event3) within 1sec send on$event2;
+
+// a simple invert event test using state
+when state($event1) is explicit_on within 1sec send on$event11 then send off$event11;
+
+// invert event using received
+when received(on$event2) within 1sec send off$event12;
+when received(off$event2) within 1sec send on$event12;
+
+// count
+when count(on$event3) > 1 within 5sec send on$event13;
+
+// delay
+when received(on$event4) within 1sec send on$event14, delay 3sec, send off$event14;
+
+// cbus
+when received(on$event5) within 1sec cbus "9055555555";

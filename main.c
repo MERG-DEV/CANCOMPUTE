@@ -78,11 +78,11 @@
  * NVs              256     1       0x0100      Flash     0x7F00 - 0x7FFF
  * Events           100     7       0x02BC      Flash     0x7C44 - 0x7EFF
  * Rules            50      4       0x00C8      Flash     0x7B7C - 0x7C43
- * Expressions      200     3       0x0258      Flash     0x7604 - 0x7B7B
- * RuleIndex        1       1       0x0001      Flash     0x7603 - 0x7603
- * ExpressionIndex  1       1       0x0001      Flash     0x7602 - 0x7602
- * ruleState        1       1       0x0001      Flash     0x7601 - 0x7601
- * NvPtr            1       1       0x0001      Flash     0x7600 - 0x7600
+ * Expressions      200     3       0x0258      Flash     0x7924 - 0x7B7B
+ * RuleIndex        1       1       0x0001      Flash     0x7943 - 0x7923
+ * ExpressionIndex  1       1       0x0001      Flash     0x7922 - 0x7922
+ * ruleState        1       1       0x0001      Flash     0x7921 - 0x7921
+ * NvPtr            1       1       0x0001      Flash     0x7920 - 0x7920
  * 
  * RAM is also use for the buffers
  * Rxbuf            200     4       800         RAM
@@ -244,8 +244,8 @@ static TickValue   lastRulesPollTime;
 WORD globalTimeStamp;
 
 static TickValue   lastTimedResponseTime;
-#define TIMED_RESPONSE_RQDAT_EVENTS     1
-#define TIMED_RESPONSE_RQDAT_RULES      2
+#define TIMED_RESPONSE_RQDAT_EVENTS     10
+#define TIMED_RESPONSE_RQDAT_RULES      11
 extern BOOL results[NUM_RULES];
 
 #ifdef BOOTLOADER_PRESENT
@@ -491,8 +491,9 @@ void myTimedResponse(void) {
                 timedResponseStep = 0;
                 return;
             }
-            eventState = currentEventState[timedResponseStep];
-            if ((eventState == EVENT_STATE_ON) || (eventState == EVENT_STATE_OFF)) {
+            if (validStart(timedResponseStep)) {
+                eventState = currentEventState[timedResponseStep];
+            
                 /**
                  * Request to get event status data from this module.
                  * Return a set of ARDAT messages containing currentEventState information
@@ -540,6 +541,30 @@ void myTimedResponse(void) {
             if (!cbusSendOpcMyNN( 0, OPC_ARDAT, cbusMsg )) {
                 // we were unable to send the message so don't update step so that we can try again next time
                 return;
+            }
+            break;
+        case TIMED_RESPONSE_NERD:
+            // The step is used to index through the event table
+            if (timedResponseStep >= NUM_EVENTS) {  // finished?
+                timedResponse = TIMED_RESPONSE_NONE;
+                timedResponseStep = 0;
+                return;
+            }
+            // if its not free and not a continuation then it is start of an event
+            if (validStart(timedResponseStep)) {
+                WORD n = getNN(timedResponseStep);
+                cbusMsg[d3] = n >> 8;
+                cbusMsg[d4] = n & 0xFF;
+            
+                n = getEN(timedResponseStep);
+                cbusMsg[d5] = n >> 8;
+                cbusMsg[d6] = n & 0xFF;
+            
+                cbusMsg[d7] = tableIndexToEvtIdx(timedResponseStep); 
+                if (!cbusSendOpcMyNN( 0, OPC_ENRSP, cbusMsg )) {
+                    // we were unable to send the message so don't update step so that we can try again next time
+                    return;
+                }
             }
             break;
     }

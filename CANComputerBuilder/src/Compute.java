@@ -138,8 +138,7 @@ public class Compute {
 	    	  dv = new PrintVisitor();
 	    	  break;
 	      case HEX:
-	    	  dv = new PrintVisitor();
-	    	  nv = new HexVisitor(dataVersion);
+	    	  dv = new HexVisitor(dataVersion);
 	    	  break;
 	      }
 	      dv.visit(n, null);

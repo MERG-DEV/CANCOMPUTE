@@ -23,8 +23,8 @@ class ASTEventLiteral extends SimpleNode {
 
   public void setEvent(String nn, String en) {
 	event = new Event();
-	event.setNN(Integer.valueOf(nn));
-	event.setEN(Integer.valueOf(en));
+	event.setNN(Integer.decode(nn));
+	event.setEN(Integer.decode(en));
   }
 
   public Event getEvent() {

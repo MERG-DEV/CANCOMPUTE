@@ -41,6 +41,16 @@ public class Util {
 		return h.substring(l-4,l).toUpperCase();
 	}
 	/**
+	 * Convert an integer (0-65535) to 4 hex digits. Low byte first.
+	 * @param ih
+	 * @return
+	 */
+	public static String hexSwapQuad(int ih) {
+		String h = hexPair(ih%256);
+		h += hexPair(ih/256);
+		return h;
+	}
+	/**
 	 * Convert an integer to a String with padded with spaces.
 	 * @param i
 	 * @return
