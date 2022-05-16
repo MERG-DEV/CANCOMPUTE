@@ -45,7 +45,7 @@ extern "C" {
      * NUM_PRODUCER_ACTIONS, NUM_CONSUMER_ACTIONS, HASH_LENGTH, EVT_NUM, 
      * EVperEVT, NUM_CONSUMED_EVENTS
      * 
-     * For MIO an action is a BYTE (unsigned char). The upperupper bit is used
+     * For MIO an action is a BYTE (unsigned char). The upper bit is used
      * to indicate a sequential action. It would be nice to define:
      * 
      * typedef union {
@@ -54,7 +54,7 @@ extern "C" {
      *          unsigned char action :7;
      *          unsigned char sequential :1;
      *      }
-     * } ACtION_T;
+     * } ACTION_T;
      * but C spec doesn't define what size this would be. Therefore I just use
      * BYTE (unsigned char).
      * 

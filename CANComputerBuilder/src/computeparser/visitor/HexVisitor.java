@@ -481,15 +481,6 @@ public class HexVisitor implements ComputeGrammarVisitor {
 		}
 		return ck;
 	}
-	private int param_checksum(String string) {
-		int ck = 0;
-		for (int i=0; i<string.length(); i+=2) {
-			String ss = string.substring(i, i+2);
-			ck -= Util.fromHex(ss.charAt(0), ss.charAt(1));
-		}
-		return ck;
-	}
-
 	@Override
 	public Object visit(ASTDefine node, Object data) {
 		ASTIdentifier id = (ASTIdentifier)node.jjtGetChild(0);
