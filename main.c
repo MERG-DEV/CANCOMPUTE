@@ -255,7 +255,7 @@ rom BYTE eeBootFlag = 0;
 #endif
 
 
-COMPUTE_ACTION_T NO_ACTION = {NOP,0};
+COMPUTE_ACTION_T NO_ACTION = {0};
 
 // MAIN APPLICATION
 #pragma code
@@ -367,8 +367,7 @@ void initialise(void) {
     
     computeEventsInit();
     // The init routine doesn't initialise the values
-    NO_ACTION.op = ACTION_OPCODE_NOP;
-    NO_ACTION.arg = 0;
+    NO_ACTION.dataIndex = 0;
     actionQueueInit();
     initActions();
     computeEventsInit();

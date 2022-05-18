@@ -69,6 +69,7 @@ void runRules(void) {
     BYTE rule;
     BYTE result;
     BYTE b;
+    COMPUTE_ACTION_T a;
     LED_BLUE = LED_ON;
     for (rule=0; rule<ruleIndex; rule++) {
         b = readFlashBlock(&(rules[rule].expression));
@@ -78,52 +79,17 @@ void runRules(void) {
             results[rule] = result;        
             if (result) {
                 b = readFlashBlock(&(rules[rule].actions));
-                doActions(b);
             } else {
                 b = readFlashBlock(&(rules[rule].thens));
-                doActions(b);
             }
+            a.dataIndex = b;
+            pushAction(a);
+            nextQueue();
         }
     }
     LED_BLUE = LED_OFF;
 }
 
-/**
- * Execute the set of Actions pointed to by nvi.
- * @param nvi the index into the NVs which is the start of the Actions
- */
-void doActions(BYTE nvi) {
-    COMPUTE_ACTION_T action;
-    BYTE op;
-    BYTE arg;
-    while (1) {
-        op = getNv(nvi++);
-        arg = getNv(nvi++);
-        
-        switch(op) {
-            case DELAY:     // a delay has a time value argument
-                action.op = ACTION_OPCODE_DELAY;
-                action.arg = arg;
-                break;
-            case SEND:      // SEND has an event number argument
-                if (EVENT_STATE(arg)) {
-                    action.op = ACTION_OPCODE_SEND_ON;
-                } else {
-                    action.op = ACTION_OPCODE_SEND_OFF;
-                }
-                action.arg = EVENT_NO(arg);
-                break;
-            case CBUS:      // CBUS has a CBUS message following the CBUS action. We save the NV index
-                action.op = ACTION_OPCODE_SEND_CBUS;
-                action.arg = nvi-1;
-                break;
-            default: 
-                nextQueue();
-                return;
-        }
-        pushAction(action);
-    }
-}
 
 /**
  * Loads the rules.

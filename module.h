@@ -82,8 +82,7 @@ extern "C" {
  * EVENTS
  */
 typedef struct {
-    BYTE op;
-    BYTE arg;
+    BYTE dataIndex;
 } COMPUTE_ACTION_T;
 
 

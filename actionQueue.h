@@ -40,6 +40,7 @@
 extern void actionQueueInit(void);
 extern BOOL pushAction(COMPUTE_ACTION_T a);
 extern COMPUTE_ACTION_T getAction(BYTE q);
+extern void changeAction(BYTE q, COMPUTE_ACTION_T newVal);
 extern void doneAction(BYTE q);
 extern COMPUTE_ACTION_T pullAction(BYTE q);
 extern COMPUTE_ACTION_T peekActionQueue(BYTE q, unsigned char index);

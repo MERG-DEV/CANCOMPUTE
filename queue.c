@@ -84,6 +84,17 @@ COMPUTE_ACTION_T peek(Queue * q, unsigned char index) {
 
 
 /**
+ * Change the last value.
+ * @param q
+ * @param newVal
+ */
+void change(Queue * q, COMPUTE_ACTION_T newVal) {
+    if (q->readIdx == q->writeIdx) return;    // empty
+    q->queue[q->readIdx] = newVal;
+}
+
+
+/**
  * Return number of items in the queue.
  */
 unsigned char quantity(Queue * q) {

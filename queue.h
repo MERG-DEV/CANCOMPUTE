@@ -54,6 +54,7 @@ extern "C" {
 extern BOOL push(Queue * q, COMPUTE_ACTION_T a);
 extern COMPUTE_ACTION_T pop(Queue * q);
 extern COMPUTE_ACTION_T peek(Queue * q, unsigned char index);
+extern void change(Queue * q, COMPUTE_ACTION_T newVal);
 extern unsigned char quantity(Queue * q);
 extern void delete(Queue * q, unsigned char index);
 

@@ -90,7 +90,14 @@ COMPUTE_ACTION_T popAction(BYTE q) {
     return pop(&(normalQueue[q]));
 }
 
-
+/**
+ * Change the value on a queue.
+ * @param q
+ * @param newVal
+ */
+void changeAction(BYTE q, COMPUTE_ACTION_T newVal) {
+    change(&(normalQueue[q]), newVal);
+}
 
 /**
  * Mark as having completed the current action.

@@ -7,6 +7,7 @@
 // forward declarations
 void doWait(BYTE q, unsigned int duration);
 void sendCBUS(BYTE nVoffset);
+void processActionsQueue(BYTE q);
 
 static TickValue startWait[NUM_ACTION_QUEUES];
 
@@ -23,54 +24,57 @@ void initActions(void) {
  */
 void processActions(void) {
     BYTE q;
+
     for (q=0; q<NUM_ACTION_QUEUES; q++) {
-        COMPUTE_ACTION_T action = getAction(q);
-
-        if (action.op == ACTION_OPCODE_NOP) {
-            doneAction(q);
-            continue;
-        }
-        // Check for SOD
-
-        if (action.op == ACTION_OPCODE_DELAY) {
-            doWait(q, action.arg);
-            continue;
-        }
-        if (action.op == ACTION_OPCODE_SEND_ON) {
-            sendProducedEvent(action.arg, TRUE);
-            doneAction(q);
-            continue;
-        }
-        if (action.op == ACTION_OPCODE_SEND_OFF) {
-            sendProducedEvent(action.arg, FALSE);
-            doneAction(q);
-            continue;
-        }
-        if (action.op == ACTION_OPCODE_SEND_CBUS) {
-            sendCBUS(action.arg);   // arg is the NV offset pointing to OPC
-            doneAction(q);
-        }
+        processActionsQueue(q);
     }
 }
 
-/**
- * Stop processing actions for a while.
- * 
- * @param duration in 0.1second units
- */
-void doWait(BYTE q, unsigned int duration) {
-    // start the timer
-    if (startWait[q].Val == 0) {
-        startWait[q].Val = tickGet();
-        return;
-    } else {
-        // check if timer expired
-        if ((tickTimeSince(startWait[q]) > ((long)duration * (long)HUNDRED_MILI_SECOND))) {
-            doneAction(q);
-            startWait[q].Val = 0;
-            return;
-        } 
-    }
+void processActionsQueue(BYTE q) {
+    BYTE op;
+    BYTE arg;
+    while (1) {
+        COMPUTE_ACTION_T action = getAction(q);
+
+        op = getNv(action.dataIndex++);
+        
+        switch (op) {
+            case SEND:
+                // send the event
+                arg = getNv(action.dataIndex++);
+                if (EVENT_STATE(arg) == EVENT_ON) {
+                    sendProducedEvent(EVENT_NO(arg), TRUE);
+                } else {
+                    sendProducedEvent(EVENT_NO(arg), FALSE);
+                }
+                break;
+            case DELAY:
+                arg = getNv(action.dataIndex++);
+                if (startWait[q].Val == 0) {
+                    startWait[q].Val = tickGet();
+                }
+                // still doing delay?
+                if (tickTimeSince(startWait[q]) < ((long)arg * (long)HUNDRED_MILI_SECOND)) {
+                    return;
+                }
+                // delay over
+                startWait[q].Val = 0;
+                break;
+            case CBUS:
+                // send the cbus message
+                sendCBUS(action.dataIndex);
+                arg = getNv(action.dataIndex);   // the CBUS OPC
+                arg = (arg >> 5);       // number of arguments
+                action.dataIndex += (arg+1);           // skip forward
+                break;
+            default:
+                // finished this action list
+                doneAction(q);
+                return;
+        }
+        // move to next data
+        changeAction(q, action);
+	}
 }
 
 
