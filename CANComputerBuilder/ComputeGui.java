@@ -1,0 +1,521 @@
+//
+/// a GUI for the CANCOMPUTE rules compiler
+/// (C) Duncan Greenwood, M5767, 2020, 2021
+/// version 1.0.2
+//  version 1.0.3
+//  version 1.0.4 Ian Hogg. Added Hex file support and fixed stdout reading.
+//
+
+import javafx.application.Application;
+
+import javafx.scene.Scene;
+
+import javafx.scene.control.Label;
+import javafx.scene.control.SplitPane;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.ChoiceBox;
+
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
+
+import javafx.scene.layout.VBox;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.RowConstraints;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.BorderPane;
+
+import javafx.scene.text.Font;
+
+import javafx.geometry.HPos;
+import javafx.geometry.VPos;
+import javafx.geometry.Insets;
+
+import javafx.stage.Stage;
+import javafx.stage.FileChooser;
+import javafx.stage.WindowEvent;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.FileReader;
+import java.io.OutputStreamWriter;
+import java.io.InputStream;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.FileNotFoundException;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import java.util.Properties;
+
+import javafx.beans.value.ObservableValue;
+
+
+// main application class
+public class ComputeGui extends Application {
+
+    String stdout = "";
+    String stderr = "";
+    String jarfile = "";
+    String lastInputFileLoaded = "";
+    String lastInputFileSaved = "";
+    String lastOutputFileSaved = "";
+    String fontName = "";
+    int fontSize;
+
+    File tempFile;
+    FileChooser fileChooser;
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+
+    @Override
+    public void start(Stage primaryStage) {
+
+        fileChooser = new FileChooser();
+        System.out.println(System.getProperty("os.name"));
+
+        String jar = "";
+
+        // create a temporary file for the compiler input
+        try {
+            tempFile = File.createTempFile("cgu", "", null);
+        } catch (IOException eio) {
+            eio.printStackTrace();
+            System.out.println("error creating temporary file");
+            return;
+        }
+
+        tempFile.deleteOnExit();
+        System.out.println("temp file = " + tempFile.getAbsolutePath());
+
+        // load properties
+        jar = getPropertyValue("jar");
+        lastInputFileLoaded = getPropertyValue("lastInputFileLoaded");
+        lastInputFileSaved = getPropertyValue("lastInputFileSaved");
+        lastOutputFileSaved = getPropertyValue("lastOutputFileSaved");
+        fontName = getPropertyValue("fontName");
+        String fs = getPropertyValue("fontSize");
+
+        // default font name
+        if (fontName == "" || fontName == null) {
+            fontName = "Courier New";
+            setPropertyValue("fontName", fontName);
+        }
+
+        // default font size
+        if (fs == "" || fs == null) {
+            fs = "10";
+        }
+
+        setPropertyValue("fontSize", fs);
+
+        fontSize = Integer.parseInt(fs);
+
+        if (fontSize == 0) {
+            fontSize = 10;
+        }
+
+        // top horiz box
+        Label progLabel = new Label("Rules compiler JAR file:");
+        progLabel.setPadding(new Insets(5));
+
+        TextField progLocation = new TextField(jar);
+        progLocation.setPrefWidth(500);
+
+        Button progBtn = new Button("_Find...");
+
+        Label typeLabel = new Label("Output format:");
+        typeLabel.setPadding(new Insets(5));
+
+        final ChoiceBox<String> cbType = new ChoiceBox<String>();
+        cbType.getItems().addAll("Hex", "Text", "GridConnect", "XML", "Debug");
+        cbType.getSelectionModel().select(0);
+
+        HBox topHBox = new HBox(progLabel, progLocation, progBtn, typeLabel, cbType);
+
+        // left text edit and buttons within a border pane
+        Label leftLabel = new Label("Rules input:");
+        leftLabel.setPadding(new Insets(5));
+
+        TextArea leftText = new TextArea();
+        leftText.setPrefWidth(2000);
+        leftText.setFont(Font.font(fontName, fontSize));
+
+        Button loadInpBtn = new Button("_Load...");
+        Button saveInpBtn = new Button("_Save...");
+        Button runBtn = new Button("_Run");
+        Button clearInpBtn = new Button("_Clear");
+
+        HBox leftBtnBox = new HBox(loadInpBtn, saveInpBtn, runBtn, clearInpBtn);
+        leftBtnBox.setSpacing(5);
+
+        BorderPane bpLeft = new BorderPane();
+        bpLeft.setTop(leftLabel);
+        bpLeft.setCenter(leftText);
+        bpLeft.setBottom(leftBtnBox);
+
+        // right text output and buttons within a border pane
+        Label rightLabel = new Label("Compiler output:");
+        rightLabel.setPadding(new Insets(5));
+
+        TextArea rightText = new TextArea();
+        rightText.setPrefWidth(2000);
+        rightText.setFont(Font.font(fontName, fontSize));
+
+        Button saveOtpBtn = new Button("S_ave...");
+        Button clearOtpBtn = new Button("Clea_r");
+        Button copyBtn = new Button("Cop_y");
+        copyBtn.setDisable(true);
+
+        HBox rightBtnBox = new HBox(saveOtpBtn, clearOtpBtn, copyBtn);
+        rightBtnBox.setSpacing(5);
+
+        BorderPane bpRight = new BorderPane();
+        bpRight.setTop(rightLabel);
+        bpRight.setCenter(rightText);
+        bpRight.setBottom(rightBtnBox);
+
+        // splitter contain left and right border panes
+        SplitPane splitPane = new SplitPane();
+        splitPane.getItems().addAll(bpLeft, bpRight);
+
+        // simple text label as a status bar
+        Label statLabel = new Label("ComputeGui 1 0 4, Duncan Greenwood M5767, duncan_greenwood@hotmail.com");
+        statLabel.setPadding(new Insets(5));
+
+        // main border pane containing top, splitter and status bar
+        BorderPane bpMain = new BorderPane();
+        bpMain.setTop(topHBox);
+        bpMain.setCenter(splitPane);
+        bpMain.setBottom(statLabel);
+
+        // create scene with main border pane
+        Scene scene = new Scene(bpMain, 1000, 600);
+
+        primaryStage.setScene(scene);
+        primaryStage.setTitle("CANCOMPUTE");
+
+        // show the completed UI
+        primaryStage.show();
+
+        // listener for changes to output type
+        cbType.getSelectionModel()
+        .selectedItemProperty()
+        .addListener( (ObservableValue<? extends String> observable, String oldValue, String newValue) -> {
+            if (newValue == "XML") {
+                copyBtn.setDisable(false);
+            } else {
+                copyBtn.setDisable(true);
+            }
+        });
+
+        //
+        /// button click handlers
+        //
+
+        // set JAR file location
+        progBtn.setOnAction(e -> {
+            setSensibleChooserPaths(getPropertyValue("jar"));
+            File selectedFile = fileChooser.showOpenDialog(primaryStage);
+
+            if (selectedFile != null) {
+                System.out.println(selectedFile.getAbsolutePath());
+                progLocation.setText(selectedFile.getAbsolutePath());
+
+                // save to config file
+                setPropertyValue("jar", selectedFile.getAbsolutePath());
+            }
+        });
+
+        // load rules data from file into left-hand pane
+        loadInpBtn.setOnAction(e -> {
+            setSensibleChooserPaths(getPropertyValue("lastInputFileLoaded"));
+            File selectedFile = fileChooser.showOpenDialog(primaryStage);
+
+            if (selectedFile != null) {
+                System.out.println("loading from = " + selectedFile.getAbsolutePath());
+
+                try {
+                    leftLabel.setText("Rules input:" + " " + selectedFile.getAbsolutePath());
+                    String contents = new String(Files.readAllBytes(Paths.get(selectedFile.getAbsolutePath())));
+                    leftText.setText(contents);
+                    setPropertyValue("lastInputFileLoaded", selectedFile.getAbsolutePath());
+                } catch (IOException eio) {
+                    eio.printStackTrace();
+                    System.out.println("error loading input file");
+                }
+            }
+        });
+
+        // save rules data from left-hand pane to a file
+        saveInpBtn.setOnAction(e -> {
+            setSensibleChooserPaths(getPropertyValue("lastInputFileSaved"));
+            File selectedFile = fileChooser.showSaveDialog(primaryStage);
+
+            if (selectedFile != null) {
+                System.out.println(selectedFile.getAbsolutePath());
+                setPropertyValue("lastInputFileSaved", selectedFile.getAbsolutePath());
+
+                try {
+                    BufferedWriter writer = new BufferedWriter(new FileWriter(selectedFile));
+                    writer.write(leftText.getText());
+                    writer.close();
+                    leftLabel.setText("Rules input:" + " " + selectedFile.getAbsolutePath());
+                } catch (IOException eio) {
+                    eio.printStackTrace();
+                    System.out.println("error writing to file");
+                }
+            }
+        });
+
+        // save output text from right-hand pane to a file
+        saveOtpBtn.setOnAction(e -> {
+            setSensibleChooserPaths(getPropertyValue("lastOutputFileSaved"));
+            File selectedFile = fileChooser.showSaveDialog(primaryStage);
+
+            if (selectedFile != null) {
+                System.out.println(selectedFile.getAbsolutePath());
+                setPropertyValue("lastOutputFileSaved", selectedFile.getAbsolutePath());
+
+                try {
+                    BufferedWriter writer = new BufferedWriter(new FileWriter(selectedFile));
+                    writer.write(rightText.getText());
+                    writer.close();
+                    rightLabel.setText("Compiler output:" + " " + selectedFile.getAbsolutePath());
+                } catch (IOException eio) {
+                    eio.printStackTrace();
+                    System.out.println("error saving compiler output to file");
+                }
+            }
+        });
+
+        // clear left-hand pane
+        clearInpBtn.setOnAction(e -> {
+            leftText.clear();
+            leftLabel.setText("Rules input:");
+        });
+
+        // clear right-hand pane
+        clearOtpBtn.setOnAction(e -> {
+            rightText.clear();
+            rightLabel.setText("Compiler output:");
+        });
+
+        // copy XML data to clipboard, if output type is XML/FCU
+        copyBtn.setOnAction(e -> {
+            final Clipboard clipboard = Clipboard.getSystemClipboard();
+            final ClipboardContent content = new ClipboardContent();
+
+            // search for substring <NodeVars>
+
+            int i = rightText.getText().indexOf("<NodeVars>");
+
+            if (i == -1) {
+                return;
+            }
+
+            System.out.println("copying " + rightText.getText().substring(i, rightText.getText().length()) + " to clipboard");
+            content.putString(rightText.getText().substring(i, rightText.getText().length()));
+            clipboard.setContent(content);
+        });
+
+        // run compiler using rules in left-hand pane
+        runBtn.setOnAction(e -> {
+
+            String cmd = progLocation.getText();
+            String arg = "";
+            String input = leftText.getText();
+
+            if (input.length() == 0) {
+                return;
+            }
+
+            switch ((String)cbType.getValue()) {
+            case "GridConnect":
+                arg = "-og";
+                break;
+            case "XML":
+                arg = "-of";
+                break;
+            case "Debug":
+                arg = "-od";
+                break;
+	    case "Text":
+		arg = "-ot";
+		break;
+            default:
+                arg = "-oh";
+                break;
+            }
+
+            try {
+                BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
+                writer.write(leftText.getText());
+                writer.close();
+            } catch (IOException eio) {
+                eio.printStackTrace();
+                System.out.println("error writing rules input to temporary file");
+                return;
+            }
+
+            stdout = "";
+            stderr = "";
+
+            try {
+                int retval = run(cmd, arg, input);
+
+                if (retval == 0) {
+                    rightText.setText(stdout);
+                } else {
+                    Alert alert = new Alert(Alert.AlertType.WARNING);
+                    alert.setTitle("Error");
+                    alert.setHeaderText("Program return = " + retval);
+                    alert.setContentText(stderr);
+                    alert.showAndWait();
+                }
+
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                System.out.println("error executing rules compiler");
+            }
+        });
+    }
+
+    // run the compiler as a process, capture the stdout stream
+    public int run(String command, String arg, String input) throws IOException, InterruptedException {
+
+        String line = "";
+
+        // process command line
+        // String[] argss = {"java", "-jar", command, arg};
+        String[] argss = {"java", "-jar", command, arg, tempFile.getAbsolutePath()};
+
+        System.out.println("command = " + command);
+        System.out.println("arg = " + arg);
+        // System.out.println("input = " + input);
+
+        ProcessBuilder pb = new ProcessBuilder(argss);
+        // create process
+        System.out.println("starting process");
+	pb.redirectErrorStream(true);	// merge stdout and stderr
+        Process process = pb.start();
+	
+        // capture process i/o
+        BufferedWriter compilerStdinWriter = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+        BufferedReader compilerStdoutReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+        // write process input
+        // System.out.println("sending process input");
+        // writer.write(input);
+        // writer.flush();
+        // v 1.0.2 don't send rules input to stdin, compiler will use temp file as input
+        // writer.close();     // close here so process sees EOF on stdin stream
+
+        // read process stdout
+        System.out.println("capturing stdout");
+
+        while ((line = compilerStdoutReader.readLine()) != null) {
+            stdout += line + "\n";
+        }
+
+        // wait for process to finish
+        System.out.println("waiting for process exit");
+        int returnValue = process.waitFor();
+
+        // close streams
+	compilerStdinWriter.close();
+        compilerStdoutReader.close();
+        System.out.println("process exits with value = " + returnValue);
+
+        // return the program exit value
+        return returnValue;
+    }
+
+    // get a property value from the config file
+    public String getPropertyValue(String propertyName) {
+
+        String propertyValue = "";
+        File configFile = new File("ComputeGui.properties");
+
+        try {
+            FileReader reader = new FileReader(configFile);
+            Properties props = new Properties();
+            props.load(reader);
+            propertyValue = props.getProperty(propertyName);
+            System.out.println("getPropertyValue - " + propertyName + " = " + propertyValue);
+            reader.close();
+        } catch (FileNotFoundException ex) {
+            System.out.println("getPropertyValue - file does not exist");
+        } catch (IOException ex) {
+            System.out.println("getPropertyValue - io error");
+        }
+
+        return (propertyValue == null ? "" : propertyValue);
+    }
+
+    // set a property value in the config file
+    public void setPropertyValue(String propertyName, String propertyValue) {
+
+        File configFile = new File("ComputeGui.properties");
+        System.out.println("setPropertyValue - " + propertyName + " = " + propertyValue);
+        Properties props = new Properties();
+
+        try {
+            FileReader reader = new FileReader(configFile);
+            props.load(reader);
+            reader.close();
+        } catch (FileNotFoundException ex) {
+            System.out.println("setPropertyValue - file does not exist");
+        } catch (IOException ex) {
+            System.out.println("setPropertyValue - io error");
+        }
+
+        try {
+            FileWriter writer = new FileWriter(configFile);
+            props.setProperty(propertyName, propertyValue);
+            props.store(writer, "properties");
+            writer.close();
+        } catch (FileNotFoundException ex) {
+            System.out.println("setPropertyValue - file does not exist");
+        } catch (IOException ex) {
+            System.out.println("setPropertyValue - io error");
+        }
+    }
+
+    // attempt to set sensible starting points in the file chooser window
+    public void setSensibleChooserPaths(String fname) {
+
+        if (fname == "" || fname == null) {
+            return;
+        }
+
+        fileChooser.setInitialFileName(fname);
+
+        System.out.println("using filename = " + fname);
+
+        File p = new File(fname);
+        String pa = p.getParent();
+
+        System.out.println("using directory name = " + pa);
+
+        if (pa != "/" && pa != null) {
+            File dname = new File(pa);
+            fileChooser.setInitialDirectory(dname);
+        }
+    }
+}

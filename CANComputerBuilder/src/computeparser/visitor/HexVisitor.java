@@ -165,7 +165,7 @@ public class HexVisitor implements ComputeGrammarVisitor {
 	private FileWriter fw;
 
 
-	public HexVisitor(Integer dataVersion) throws IOException {
+	public HexVisitor(Integer dataVersion, String outputFilename) throws IOException {
 		
 		addressInfos = new HashMap<Integer, AddressInfo>();
 		/* Address info for data version 1 */
@@ -191,8 +191,8 @@ public class HexVisitor implements ComputeGrammarVisitor {
 			System.out.println("Can't determine addressinfo for datavsersion "+dataVersion);
 			throw new IllegalArgumentException("Can't determine addressinfo for datavsersion "+dataVersion);
 		}
-		fw = new FileWriter("rules.hex");
-		System.out.println("opened rules.hex for writing");
+		fw = new FileWriter(outputFilename);
+		System.out.println("opened \""+outputFilename+"\" for writing");
 		System.out.println("Running HexVisitor");
 		datas.add(addressInfo.version);		// NV#0 is the version
 	}

@@ -84,7 +84,7 @@ void processActionsQueue(BYTE q) {
  * data bytes.
  */
 void sendCBUS(BYTE nVoffset) {
-    BYTE msg[d0+4];
+    BYTE msg[d0+8];
     BYTE i;
     BYTE len;
     msg[d0] = getNv(nVoffset);    // OPC

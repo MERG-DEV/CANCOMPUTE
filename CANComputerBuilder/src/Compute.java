@@ -45,6 +45,7 @@ public class Compute {
 	public static void main(String args []) throws FileNotFoundException
 	{
 		InputStream is = null;
+		String inputFilename = null;
 		OutputFormat outputFormat = OutputFormat.TEXT;
 		String moduleVersion = "v2";	// default version
 		Integer dataVersion = 1;
@@ -99,8 +100,9 @@ public class Compute {
 						usage();
 					}
 				} else {
-					System.out.println("Reading from file..."+args[i]);
-					is = new FileInputStream(new File(args[i]));
+					inputFilename = args[i];
+					System.out.println("Reading from file..."+inputFilename);
+					is = new FileInputStream(new File(inputFilename));
 				}
 			}
 			
@@ -138,7 +140,18 @@ public class Compute {
 	    	  dv = new PrintVisitor();
 	    	  break;
 	      case HEX:
-	    	  dv = new HexVisitor(dataVersion);
+	    	  String outputFilename = "rules.hex";
+	    	  if (inputFilename != null) {
+	    		  // remove any ".txt" or ".rules"
+	    		  int dotPos = inputFilename.lastIndexOf('.');
+	    		  if (dotPos > 0) {
+	    			  outputFilename = inputFilename.substring(0, dotPos);
+	    		  } else {
+	    			  outputFilename = inputFilename;
+	    		  }
+	    		  outputFilename += ".hex";
+	    	  }
+	    	  dv = new HexVisitor(dataVersion, outputFilename);
 	    	  break;
 	      }
 	      dv.visit(n, null);
