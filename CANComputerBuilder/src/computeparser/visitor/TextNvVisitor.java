@@ -120,7 +120,7 @@ public class TextNvVisitor implements ComputeGrammarVisitor {
 				char c1 = m.charAt(i--);
 				char c2 = '0';
 				if (i >=0) c2 = m.charAt(i);
-				Integer b = Util.fromHex(c1, c2);
+				Integer b = Util.fromHex(c2, c1);
 				bytes.add(0, b);					// add to start
 			}
 			// check that the number of bytes supplied matched the length defined by opcode

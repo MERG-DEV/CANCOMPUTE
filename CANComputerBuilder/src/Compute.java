@@ -51,7 +51,7 @@ public class Compute {
 		Integer dataVersion = 1;
 
 		
-	    System.out.println("Rule Compiler v6.1 for rule format v3");
+	    System.out.println("Rule Compiler v6.3 for rule format v3");
 		
 		if (args.length > 0) {
 			for (int i=0; i<args.length; i++) {
