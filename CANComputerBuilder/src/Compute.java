@@ -20,7 +20,7 @@ import computeparser.visitor.PrintVisitor;
 
 public class Compute {
 	private static void usage() {
-		System.out.println("Usage: Compute [-o g|f|t] [filename]");
+		System.out.println("Usage: Compute [-o g|f|t|h] [filename]");
 		System.out.println("/t-og\toutputs in grid connect format");
 		System.out.println("/t-of\toutputs in FCU XML format");
 		System.out.println("/t-od\tprints debug of rules");
@@ -51,7 +51,7 @@ public class Compute {
 		Integer dataVersion = 1;
 
 		
-	    System.out.println("Rule Compiler v6.3 for rule format v3");
+	    System.out.println("Rule Compiler v6.5 for rule format v3");
 		
 		if (args.length > 0) {
 			for (int i=0; i<args.length; i++) {
@@ -83,7 +83,7 @@ public class Compute {
 								end++;
 							}
 							System.out.println("start="+start+" end="+end);
-							moduleVersion = moduleVersion.substring(start, end);
+							moduleVersion = suppliedVersion.substring(start, end);
 						} catch (IndexOutOfBoundsException e) {
 							// leave moduleVersion at the default
 							System.out.println("Can't understand module version "+suppliedVersion+" - using "+moduleVersion);
@@ -151,6 +151,7 @@ public class Compute {
 	    		  }
 	    		  outputFilename += ".hex";
 	    	  }
+	    	  
 	    	  dv = new HexVisitor(dataVersion, outputFilename);
 	    	  break;
 	      }

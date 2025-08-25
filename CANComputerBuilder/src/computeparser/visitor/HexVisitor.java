@@ -233,6 +233,7 @@ public class HexVisitor implements ComputeGrammarVisitor {
 		 * The version numbers in this param structure don't matter since this
 		 * data isn't actually written to the module but just used by FCU.
 		 */
+
 		try {
 			fw.write(hexRecord(HexRecords.HEADER, 0, "0000"));
 		} catch (IOException e) {
@@ -486,8 +487,8 @@ public class HexVisitor implements ComputeGrammarVisitor {
 		ASTIdentifier id = (ASTIdentifier)node.jjtGetChild(0);
 		ASTEventLiteral ev = (ASTEventLiteral)node.jjtGetChild(1);
 
-		System.out.println("Got a define for identifier("+id.getName()+")="+ev.getEvent());
-		System.out.println("Add Event "+ev.getEvent()+" EV#1="+Variables.getIndex());
+		//System.out.println("Got a define for identifier("+id.getName()+")="+ev.getEvent());
+		//System.out.println("Add Event "+ev.getEvent()+" EV#1="+Variables.getIndex());
 		events.add(ev.getEvent());
 		Variables.setIndex(id.getName());
 		
@@ -500,7 +501,6 @@ public class HexVisitor implements ComputeGrammarVisitor {
 		if (node.jjtGetNumChildren() > 0) {
 			Rule r = new Rule();
 			r.expression = (Expression) node.jjtGetChild(0).jjtAccept(this, data);
-			
 			r.within = ((Integer)(node.jjtGetChild(1).jjtAccept(this, data)));
 
 			/* Actions */
@@ -607,7 +607,7 @@ public class HexVisitor implements ComputeGrammarVisitor {
 				e.op2.expression = e2;
 				
 				e2.op1 = new Operand();
-				e2.op1.expression =	(Expression) node.jjtGetChild(i).jjtAccept(this, data);
+				e2.op1.expression =	(Expression) node.jjtGetChild(i-1).jjtAccept(this, data);
 				e = e2;
 			}
 			e.op2 = new Operand();
@@ -636,12 +636,11 @@ public class HexVisitor implements ComputeGrammarVisitor {
 				e.op2.expression = e2;
 				
 				e2.op1 = new Operand();
-				e2.op1.expression =	(Expression) node.jjtGetChild(i).jjtAccept(this, data);
+				e2.op1.expression =	(Expression) node.jjtGetChild(i-1).jjtAccept(this, data);
 				e = e2;
 			}
 			e.op2 = new Operand();
 			e.op2.expression = (Expression) node.jjtGetChild(node.jjtGetNumChildren()-1).jjtAccept(this, data); //last
-
 			return fe;
 		} 
 		return node.jjtGetChild(0).jjtAccept(this, data);
@@ -697,7 +696,6 @@ public class HexVisitor implements ComputeGrammarVisitor {
 
 	@Override
 	public Object visit(ASTPrimaryBooleanExpression node, Object data) {
-
 		if (node.getOpCode() == OpCodes.STATE) {
 			Expression e = new Expression();
 			expressions.add(e);
@@ -706,6 +704,7 @@ public class HexVisitor implements ComputeGrammarVisitor {
 			ei = (ASTIdentifier) node.jjtGetChild(0);
 			ASTEventState es;
 			es = (ASTEventState) node.jjtGetChild(1);
+
 			if (es.getState() == EventState.ON) {
 				e.opCode = NvOpCode.STATE_ON;
 			} else if (es.getState() == EventState.OFF) {
@@ -719,6 +718,7 @@ public class HexVisitor implements ComputeGrammarVisitor {
 			} 
 			
 			int ev = Variables.getIndex(ei.getName());
+
 			if (ev > 0) {
 				e.op1 = new Operand();
 				e.op1.number = ev;
@@ -802,6 +802,7 @@ public class HexVisitor implements ComputeGrammarVisitor {
 		if (node.jjtGetNumChildren() >  1) {
 			Expression e = new Expression();
 			expressions.add(e);
+			Expression fe = e;
 			String op = node.getOpCode();
 			if ("+".equals(op)) {
 				e.opCode = NvOpCode.PLUS;
@@ -812,11 +813,31 @@ public class HexVisitor implements ComputeGrammarVisitor {
 			}
 			e.op1 = new Operand();
 			e.op1.expression = (Expression) node.jjtGetChild(0).jjtAccept(this, data);
+			
+			for (int i=2; i<node.jjtGetNumChildren(); i++) {
+				Expression e2 = new Expression();
+				expressions.add(e2);
+				op = node.getOpCode();
+				if ("+".equals(op)) {
+					e2.opCode = NvOpCode.PLUS;
+				} else if ("-".equals(op)){
+					e2.opCode = NvOpCode.MINUS;
+				} else {
+					System.out.println("Error unknown AdditiveExpression operator"+op);
+				}
+				e.op2 = new Operand();
+				e.op2.expression = e2;
+				
+				e2.op1 = new Operand();
+				e2.op1.expression =	(Expression) node.jjtGetChild(i-1).jjtAccept(this, data);
+				e = e2;
+			}
 			e.op2 = new Operand();
-			e.op2.expression = (Expression) node.jjtGetChild(1).jjtAccept(this, data);
-			return e;
-		}
+			e.op2.expression = (Expression) node.jjtGetChild(node.jjtGetNumChildren()-1).jjtAccept(this, data); //last
+			return fe;
+		} 
 		return node.jjtGetChild(0).jjtAccept(this, data);
+
 	}
 
 	@Override

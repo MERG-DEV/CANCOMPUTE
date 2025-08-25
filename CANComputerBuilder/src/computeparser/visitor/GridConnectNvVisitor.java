@@ -387,7 +387,7 @@ public class GridConnectNvVisitor implements ComputeGrammarVisitor {
 	}
 	
 	private void doNv(int nvi, int val, String desc) {
-		System.out.println(":S0B20N"+ASTSetNN.getNN()+Util.hexPair(nvi)+Util.hexPair(val)+";");
+		System.out.println(":S0B20N96"+ASTSetNN.getNN()+Util.hexPair(nvi)+Util.hexPair(val)+";");
 	}
 
 }
