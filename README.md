@@ -21,6 +21,10 @@ This work is licensed under the:
                                   legally restrict others from doing anything the license permits.
    ** For commercial use, please contact the original copyright holder(s) to agree licensing terms
 
+This repository contains files needed to build CANCOMPUTE module code for the PIC18F25K80. 
+The same hex file can also be loaded to a PIC18F26K80. The target hardware is the CANTST, supplied by RMEUK,
+a kit of parts is available as [CANCOMP](https://www.rmeuk.com/buycbuskits.html).
+
 The actual CBUSlib files needed by the project are:
   * CBUSlib header files
     - callbacks.h
@@ -49,3 +53,8 @@ The actual CBUSlib files needed by the project are:
     - cbusdefs.h
 
 You will also need to ensure you are using the correct linker script from this repo depending upon target processor type. 
+
+The repo also contains the files needed to build the rules compiler within the CANcomputerBuilder directory. 
+This uses the JJTree tool to construct the java files from the rules grammar file 
+CANcomputerBuilder/src/compueparser/ComputeGrammar.jjt. You will need to set up your Java IDE to correctly call JJTree to compile the grammar file and generated Java files.
+
